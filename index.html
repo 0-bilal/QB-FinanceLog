@@ -3,949 +3,920 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة الأموال الشخصية</title>
-  <link rel="stylesheet" href="./assets/css/theme.css" />
+    <title>تسجيل الدخول - نظام إدارة المالية الشخصية</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+        
+        /* ========== متغيرات التصميم الجديد ========== */
+        :root {
+            /* نظام الألوان الجديد - Midnight Aurora */
+            --bg-primary: #0c0f1a;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --bg-glass: rgba(31, 41, 55, 0.4);
+            --bg-glass-light: rgba(55, 65, 81, 0.3);
+            
+            /* ألوان النيون والتوهج */
+            --neon-blue: #00d4ff;
+            --neon-purple: #b794f6;
+            --neon-green: #48bb78;
+            --neon-orange: #ed8936;
+            --neon-pink: #f687b3;
+            --neon-cyan: #4fd1c7;
+            
+            /* ألوان النص */
+            --text-primary: #f7fafc;
+            --text-secondary: #cbd5e0;
+            --text-muted: #718096;
+            --text-accent: var(--neon-blue);
+            
+            /* التدرجات الجديدة */
+            --gradient-cosmic: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            --gradient-aurora: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --gradient-ocean: linear-gradient(135deg, #667eea 0%, #4facfe 100%);
+            --gradient-sunset: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-forest: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            --gradient-fire: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            
+            /* الظلال والتوهج */
+            --glow-blue: 0 0 40px rgba(0, 212, 255, 0.4);
+            --glow-purple: 0 0 40px rgba(183, 148, 246, 0.4);
+            --glow-green: 0 0 40px rgba(72, 187, 120, 0.4);
+            --shadow-neumorphism: 9px 9px 16px rgba(0, 0, 0, 0.4), -9px -9px 16px rgba(31, 41, 55, 0.1);
+            --shadow-inset: inset 6px 6px 12px rgba(0, 0, 0, 0.3), inset -6px -6px 12px rgba(31, 41, 55, 0.1);
+            
+            /* الأبعاد */
+            --border-radius: 24px;
+            --border-radius-sm: 16px;
+            --border-radius-lg: 32px;
+            
+            /* الانتقالات */
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ========== إعادة تعيين الأساسيات ========== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            direction: rtl;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* خلفية متحركة */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(183, 148, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(72, 187, 120, 0.05) 0%, transparent 50%);
+            z-index: -1;
+            animation: backgroundPulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes backgroundPulse {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* الحاوية الرئيسية */
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            position: relative;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* بطاقة تسجيل الدخول */
+        .login-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--border-radius-lg);
+            padding: 40px;
+            box-shadow: var(--shadow-neumorphism);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 4px;
+            background: var(--gradient-cosmic);
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        }
+
+        .login-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent 0deg, var(--neon-blue) 60deg, transparent 120deg);
+            opacity: 0.05;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* شعار ورأس الصفحة */
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-cosmic);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 20px;
+            box-shadow: var(--glow-blue), var(--shadow-neumorphism);
+            position: relative;
+            overflow: hidden;
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(5deg); }
+        }
+
+        .login-logo::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+            transform: translateX(-100%);
+            animation: logoShimmer 3s infinite;
+        }
+
+        @keyframes logoShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .login-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: var(--gradient-cosmic);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-shadow: var(--glow-blue);
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        /* نموذج تسجيل الدخول */
+        .login-form {
+            display: grid;
+            gap: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* حقل إدخال الرقم */
+        .pin-input-container {
+            position: relative;
+        }
+
+        .pin-input {
+            width: 100%;
+            height: 60px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            padding: 16px 20px;
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.5em;
+            transition: var(--transition);
+            position: relative;
+            z-index: 2;
+            box-shadow: var(--shadow-inset);
+            font-family: inherit;
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: var(--shadow-inset), 0 0 0 4px rgba(0, 212, 255, 0.2);
+            background: rgba(31, 41, 55, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .pin-input:hover:not(:focus) {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .pin-input::placeholder {
+            color: var(--text-muted);
+            letter-spacing: 0.3em;
+            font-weight: 400;
+        }
+
+        /* مؤشرات الخانات */
+        .pin-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .pin-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .pin-dot.active {
+            background: var(--gradient-cosmic);
+            box-shadow: var(--glow-blue);
+            transform: scale(1.3);
+        }
+
+        .pin-dot.active::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            opacity: 0.3;
+            animation: ripple 0.6s ease-out;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* زر تسجيل الدخول */
+        .login-button {
+            width: 100%;
+            height: 56px;
+            background: var(--gradient-cosmic);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-neumorphism), var(--glow-blue);
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: inherit;
+        }
+
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-button:hover::before {
+            left: 100%;
+        }
+
+        .login-button:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-neumorphism), var(--glow-blue), 0 10px 40px rgba(0, 212, 255, 0.6);
+        }
+
+        .login-button:active {
+            transform: translateY(-1px);
+        }
+
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* حالة التحميل */
+        .login-button.loading {
+            pointer-events: none;
+        }
+
+        .login-button.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid white;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-button.loading span {
+            opacity: 0;
+        }
+
+        /* رسائل الحالة */
+        .status-message {
+            padding: 16px 20px;
+            border-radius: var(--border-radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .status-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .status-message.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .status-message.success {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.2) 0%, rgba(72, 187, 120, 0.1) 100%);
+            color: var(--neon-green);
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* تذييل الصفحة */
+        .login-footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-footer p {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .login-footer .version {
+            margin-top: 8px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        /* لوحة المفاتيح الرقمية */
+        .numeric-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition-slow);
+        }
+
+        .numeric-keypad.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .keypad-btn {
+            width: 60px;
+            height: 60px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: var(--shadow-neumorphism);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .keypad-btn:hover {
+            background: rgba(31, 41, 55, 0.6);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow-neumorphism), var(--glow-blue);
+        }
+
+        .keypad-btn:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .keypad-btn.special {
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--neon-blue);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+
+        .keypad-btn.special:hover {
+            background: rgba(0, 212, 255, 0.25);
+            box-shadow: var(--shadow-neumorphism), var(--glow-blue);
+        }
+
+        .keypad-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(-45deg);
+            transition: var(--transition);
+            opacity: 0;
+        }
+
+        .keypad-btn:hover::before {
+            opacity: 1;
+            animation: shimmer 0.6s ease-out;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(-45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(-45deg); }
+        }
+
+        /* جسيمات متحركة */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 4s ease-in-out infinite;
+            box-shadow: var(--glow-blue);
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.7;
+            }
+            50% { 
+                transform: translateY(-30px) rotate(180deg);
+                opacity: 1;
+            }
+        }
+
+        /* الاستجابة للشاشات الصغيرة */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 24px;
+                margin: 16px;
+            }
+
+            .login-title {
+                font-size: 28px;
+            }
+
+            .login-logo {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+
+            .pin-input {
+                height: 50px;
+                font-size: 18px;
+            }
+
+            .login-button {
+                height: 48px;
+                font-size: 16px;
+            }
+
+            .keypad-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 16px;
+            }
+
+            .numeric-keypad {
+                gap: 8px;
+            }
+
+            .pin-indicators {
+                gap: 12px;
+            }
+        }
+
+        /* تحسينات اللمس والتفاعل */
+        .login-button,
+        .keypad-btn,
+        .pin-input {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .login-card {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .pin-input {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        /* تقليل الحركات للمستخدمين الذين يفضلون ذلك */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            
+            body::before,
+            .login-card::after,
+            .login-logo::before {
+                animation: none !important;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <!-- الحاوي الرئيسي -->
-    <div class="container">
-        <!-- الهيدر -->
-        <div class="header">
-            <div class="welcome-section">
-                <div class="welcome-text">مرحباً بعودتك</div>
-                <div class="user-name">أحمد محمد</div>
-            </div>
+    <!-- جسيمات متحركة -->
+    <div class="particle" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="top: 60%; left: 85%; animation-delay: 1s;"></div>
+    <div class="particle" style="top: 30%; left: 75%; animation-delay: 2s;"></div>
+    <div class="particle" style="top: 80%; left: 15%; animation-delay: 1.5s;"></div>
+    <div class="particle" style="top: 45%; left: 90%; animation-delay: 3s;"></div>
+
+    <!-- الحاوية الرئيسية -->
+    <div class="login-container">
+        <div class="login-card">
             
-            <div class="balance-card">
-                <div class="balance-label">الرصيد الإجمالي</div>
-                <div class="balance-amount" id="total-balance">$86,996.36</div>
-                <div class="balance-change">
-                    <span>↗</span>
-                    <span>+2.5% من الشهر الماضي</span>
-                </div>
+            <!-- رأس الصفحة -->
+            <div class="login-header">
+                <div class="login-logo">💰</div>
+                <h1 class="login-title">مرحباً بك</h1>
+                <p class="login-subtitle">أدخل رقمك السري للدخول</p>
             </div>
-        </div>
 
-        <!-- المحتوى -->
-        <div class="content">
-            <!-- لوحة التحكم -->
-            <div class="tab-content active" id="dashboard">
-                <div class="stats-grid">
-                    <div class="stat-card income">
-                        <div class="stat-value" id="total-income">$12,450</div>
-                        <div class="stat-label">الدخل الشهري</div>
-                    </div>
-                    <div class="stat-card expense">
-                        <div class="stat-value" id="total-expenses">$8,320</div>
-                        <div class="stat-label">المصاريف الشهرية</div>
-                    </div>
-                </div>
-
-                <div class="quick-actions">
-                    <div class="quick-action" id="add-income-btn">
-                        <div class="icon">+</div>
-                        <span>إضافة دخل</span>
-                    </div>
-                    <div class="quick-action expense" id="add-expense-btn">
-                        <div class="icon">-</div>
-                        <span>إضافة مصروف</span>
-                    </div>
-                </div>
-
-                <div class="section-header">
-                    <div class="section-title">المعاملات الأخيرة</div>
-                    <div class="see-all" id="see-all-transactions">عرض الكل ←</div>
-                </div>
-
-                <div class="transaction-list" id="recent-transactions">
-                    <div class="transaction-item">
-                        <div class="transaction-icon expense">🍔</div>
-                        <div class="transaction-details">
-                            <div class="transaction-title">مطعم سريع</div>
-                            <div class="transaction-category">طعام وشراب</div>
-                        </div>
-                        <div class="transaction-amount expense">-$25.48</div>
+            <!-- نموذج تسجيل الدخول -->
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="pinInput">الرقم السري (6 أرقام)</label>
+                    <div class="pin-input-container">
+                        <input 
+                            type="password" 
+                            id="pinInput" 
+                            class="pin-input" 
+                            maxlength="6" 
+                            placeholder="● ● ● ● ● ●"
+                            autocomplete="off"
+                            inputmode="numeric"
+                        />
                     </div>
                     
-                    <div class="transaction-item">
-                        <div class="transaction-icon expense">🏠</div>
-                        <div class="transaction-details">
-                            <div class="transaction-title">إيجار المنزل</div>
-                            <div class="transaction-category">السكن</div>
-                        </div>
-                        <div class="transaction-amount expense">-$1,240.60</div>
-                    </div>
-                    
-                    <div class="transaction-item">
-                        <div class="transaction-icon income">💼</div>
-                        <div class="transaction-details">
-                            <div class="transaction-title">راتب الشهر</div>
-                            <div class="transaction-category">الدخل الرئيسي</div>
-                        </div>
-                        <div class="transaction-amount income">+$4,850.00</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- صفحة المعاملات -->
-            <div class="tab-content" id="transactions">
-                <button class="action-btn" id="add-transaction-btn">+ إضافة معاملة جديدة</button>
-                
-                <div class="period-selector">
-                    <button class="period-btn" data-period="day">اليوم</button>
-                    <button class="period-btn active" data-period="week">الأسبوع</button>
-                    <button class="period-btn" data-period="month">الشهر</button>
-                    <button class="period-btn" data-period="year">السنة</button>
-                </div>
-
-                <div class="chart-container">
-                    <div class="chart-placeholder">
-                        <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
-                        <div>الرسم البياني للمعاملات</div>
+                    <!-- مؤشرات الخانات -->
+                    <div class="pin-indicators" id="pinIndicators">
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
+                        <div class="pin-dot"></div>
                     </div>
                 </div>
 
-                <div class="transaction-list" id="all-transactions">
-                    <!-- جميع المعاملات ستظهر هنا -->
+                <!-- رسالة الحالة -->
+                <div class="status-message" id="statusMessage"></div>
+
+                <!-- زر تسجيل الدخول -->
+                <button type="submit" class="login-button" id="loginButton">
+                    <span>دخول</span>
+                </button>
+
+                <!-- لوحة المفاتيح الرقمية -->
+                <div class="numeric-keypad" id="numericKeypad">
+                    <button type="button" class="keypad-btn" data-number="1">1</button>
+                    <button type="button" class="keypad-btn" data-number="2">2</button>
+                    <button type="button" class="keypad-btn" data-number="3">3</button>
+                    <button type="button" class="keypad-btn" data-number="4">4</button>
+                    <button type="button" class="keypad-btn" data-number="5">5</button>
+                    <button type="button" class="keypad-btn" data-number="6">6</button>
+                    <button type="button" class="keypad-btn" data-number="7">7</button>
+                    <button type="button" class="keypad-btn" data-number="8">8</button>
+                    <button type="button" class="keypad-btn" data-number="9">9</button>
+                    <button type="button" class="keypad-btn special" data-action="clear">✕</button>
+                    <button type="button" class="keypad-btn" data-number="0">0</button>
+                    <button type="button" class="keypad-btn special" data-action="backspace">⌫</button>
                 </div>
-            </div>
-
-            <!-- صفحة الحسابات -->
-            <div class="tab-content" id="accounts">
-                <button class="action-btn" id="add-account-btn">+ إضافة حساب جديد</button>
-                
-                <div id="accounts-list">
-                    <div class="account-card">
-                        <div class="account-type">حساب بنكي</div>
-                        <div class="account-name">البنك الأهلي</div>
-                        <div class="account-balance">$45,250.00</div>
-                    </div>
-                    
-                    <div class="account-card">
-                        <div class="account-type">نقدي</div>
-                        <div class="account-name">المحفظة</div>
-                        <div class="account-balance">$1,240.36</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- صفحة الديون -->
-            <div class="tab-content" id="debts">
-                <button class="action-btn" id="add-debt-btn">+ إضافة دين جديد</button>
-                
-                <div class="debt-section">
-                    <h3 class="debt-section-title">ديون لي</h3>
-                    <div id="debts-to-me">
-                        <div class="debt-card debt-to-me">
-                            <div class="debt-info">
-                                <h4>محمد أحمد</h4>
-                                <p>مستحق منذ 5 أيام</p>
-                            </div>
-                            <div class="debt-amount positive">+$500.00</div>
-                        </div>
-                        
-                        <div class="debt-card debt-to-me">
-                            <div class="debt-info">
-                                <h4>سارة خالد</h4>
-                                <p>مستحق منذ 12 يوم</p>
-                            </div>
-                            <div class="debt-amount positive">+$250.00</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="debt-section">
-                    <h3 class="debt-section-title">ديون عليّ</h3>
-                    <div id="debts-from-me">
-                        <div class="debt-card debt-from-me">
-                            <div class="debt-info">
-                                <h4>علي حسن</h4>
-                                <p>مستحق خلال 3 أيام</p>
-                            </div>
-                            <div class="debt-amount negative">-$800.00</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- صفحة الادخار -->
-            <div class="tab-content" id="savings">
-                <button class="action-btn" id="add-savings-goal-btn">🎯 إضافة هدف ادخار</button>
-                
-                <div id="savings-goals">
-                    <div class="account-card">
-                        <div class="account-type">هدف الادخار</div>
-                        <div class="account-name">سيارة جديدة</div>
-                        <div class="account-balance">$15,000 / $25,000</div>
-                        <div style="margin-top: 16px;">
-                            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
-                                <div style="background: var(--gradient-cosmic); height: 100%; width: 60%; border-radius: 4px; box-shadow: var(--glow-blue);"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="account-card">
-                        <div class="account-type">هدف الادخار</div>
-                        <div class="account-name">إجازة صيفية</div>
-                        <div class="account-balance">$3,200 / $5,000</div>
-                        <div style="margin-top: 16px;">
-                            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
-                                <div style="background: var(--gradient-cosmic); height: 100%; width: 64%; border-radius: 4px; box-shadow: var(--glow-blue);"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- صفحة الإعدادات -->
-            <div class="tab-content" id="settings">
-                <div class="settings-list">
-                    <div class="setting-item" id="manage-categories-btn">
-                        <div class="setting-icon">📋</div>
-                        <div class="setting-info">
-                            <div class="setting-title">إدارة الفئات</div>
-                            <div class="setting-description">إضافة وتعديل فئات المعاملات</div>
-                        </div>
-                    </div>
-
-                    <div class="setting-item" id="manage-people-btn">
-                        <div class="setting-icon">👥</div>
-                        <div class="setting-info">
-                            <div class="setting-title">إدارة الأشخاص</div>
-                            <div class="setting-description">إضافة وإدارة جهات الاتصال</div>
-                        </div>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="setting-icon">💱</div>
-                        <div class="setting-info">
-                            <div class="setting-title">العملة الافتراضية</div>
-                            <div class="setting-description">ريال سعودي (ر.س)</div>
-                        </div>
-                    </div>
-
-                    <div class="setting-item" id="export-data-btn">
-                        <div class="setting-icon">📤</div>
-                        <div class="setting-info">
-                            <div class="setting-title">تصدير البيانات</div>
-                            <div class="setting-description">حفظ نسخة احتياطية من بياناتك</div>
-                        </div>
-                    </div>
-
-                    <div class="setting-item" id="clear-all-data-btn">
-                        <div class="setting-icon" style="background: rgba(237, 137, 54, 0.15); color: var(--neon-orange); border-color: rgba(237, 137, 54, 0.3);">🗑️</div>
-                        <div class="setting-info">
-                            <div class="setting-title">مسح جميع البيانات</div>
-                            <div class="setting-description">حذف جميع المعاملات والحسابات</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- شريط التنقل -->
-        <div class="nav-tabs">
-            <button class="nav-tab active" data-tab="dashboard">
-                <div class="icon">🏠</div>
-                <span>الرئيسية</span>
-            </button>
-            <button class="nav-tab" data-tab="transactions">
-                <div class="icon">📊</div>
-                <span>الإحصائيات</span>
-            </button>
-            <button class="nav-tab" data-tab="accounts">
-                <div class="icon">💳</div>
-                <span>الحسابات</span>
-            </button>
-            <button class="nav-tab" data-tab="debts">
-                <div class="icon">🤝</div>
-                <span>الديون</span>
-            </button>
-            <button class="nav-tab" data-tab="savings">
-                <div class="icon">💰</div>
-                <span>الادخار</span>
-            </button>
-            <button class="nav-tab" data-tab="settings">
-                <div class="icon">⚙️</div>
-                <span>الإعدادات</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- الزر العائم -->
-  
-
-    <!-- نافذة المعاملات -->
-    <div class="modal" id="transaction-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="transaction-modal-title">إضافة معاملة جديدة</h3>
-                <button class="close" id="close-transaction-modal">&times;</button>
-            </div>
-            <form id="transaction-form">
-                <div class="form-group">
-                    <label>النوع:</label>
-                    <select id="transaction-type" required>
-                        <option value="">اختر النوع</option>
-                        <option value="income">دخل</option>
-                        <option value="expense">مصروف</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>المبلغ:</label>
-                    <input type="number" id="transaction-amount" step="0.01" required placeholder="0.00">
-                </div>
-
-                <div class="form-group">
-                    <label>الوصف:</label>
-                    <input type="text" id="transaction-description" required placeholder="وصف المعاملة">
-                </div>
-
-                <div class="form-group">
-                    <label>الفئة:</label>
-                    <select id="transaction-category" required>
-                        <option value="">اختر الفئة</option>
-                        <option value="food">طعام وشراب</option>
-                        <option value="transport">النقل</option>
-                        <option value="housing">السكن</option>
-                        <option value="salary">راتب</option>
-                        <option value="other">أخرى</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>الحساب:</label>
-                    <select id="transaction-account" required>
-                        <option value="">اختر الحساب</option>
-                        <option value="bank1">البنك الأهلي</option>
-                        <option value="cash">المحفظة</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>التاريخ:</label>
-                    <input type="date" id="transaction-date" required>
-                </div>
-
-                <div class="form-group">
-                    <label>ملاحظات:</label>
-                    <textarea id="transaction-notes" rows="3" placeholder="ملاحظات إضافية (اختياري)"></textarea>
-                </div>
-
-                <button type="submit" class="action-btn">💾 حفظ المعاملة</button>
             </form>
-        </div>
-    </div>
 
-    <!-- نافذة الحسابات -->
-    <div class="modal" id="account-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">إضافة حساب جديد</h3>
-                <button class="close" id="close-account-modal">&times;</button>
-            </div>
-            <form id="account-form">
-                <div class="form-group">
-                    <label>اسم الحساب:</label>
-                    <input type="text" id="account-name" required placeholder="اسم الحساب">
-                </div>
-
-                <div class="form-group">
-                    <label>نوع الحساب:</label>
-                    <select id="account-type" required>
-                        <option value="">اختر النوع</option>
-                        <option value="cash">نقدي</option>
-                        <option value="bank">حساب بنكي</option>
-                        <option value="credit">بطاقة ائتمان</option>
-                        <option value="savings">حساب توفير</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>الرصيد الابتدائي:</label>
-                    <input type="number" id="account-initial-balance" step="0.01" value="0" required placeholder="0.00">
-                </div>
-
-                <button type="submit" class="action-btn">💾 حفظ الحساب</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- نافذة الديون -->
-    <div class="modal" id="debt-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">إضافة دين جديد</h3>
-                <button class="close" id="close-debt-modal">&times;</button>
-            </div>
-            <form id="debt-form">
-                <div class="form-group">
-                    <label>نوع الدين:</label>
-                    <select id="debt-type" required>
-                        <option value="">اختر النوع</option>
-                        <option value="to-me">دين لي (شخص يدين لي)</option>
-                        <option value="from-me">دين عليّ (أدين لشخص)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>الشخص:</label>
-                    <select id="debt-person" required>
-                        <option value="">اختر الشخص</option>
-                        <option value="person1">محمد أحمد</option>
-                        <option value="person2">سارة خالد</option>
-                        <option value="person3">علي حسن</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>المبلغ:</label>
-                    <input type="number" id="debt-amount" step="0.01" required placeholder="0.00">
-                </div>
-
-                <div class="form-group">
-                    <label>الوصف:</label>
-                    <input type="text" id="debt-description" required placeholder="وصف الدين">
-                </div>
-
-                <div class="form-group">
-                    <label>تاريخ الدين:</label>
-                    <input type="date" id="debt-date" required>
-                </div>
-
-                <button type="submit" class="action-btn">💾 حفظ الدين</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- نافذة أهداف الادخار -->
-    <div class="modal" id="savings-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">إضافة هدف ادخار</h3>
-                <button class="close" id="close-savings-modal">&times;</button>
-            </div>
-            <form id="savings-form">
-                <div class="form-group">
-                    <label>اسم الهدف:</label>
-                    <input type="text" id="savings-goal-name" required placeholder="مثال: سيارة جديدة">
-                </div>
-
-                <div class="form-group">
-                    <label>المبلغ المستهدف:</label>
-                    <input type="number" id="savings-target-amount" step="0.01" required placeholder="0.00">
-                </div>
-
-                <div class="form-group">
-                    <label>المبلغ المدخر حالياً:</label>
-                    <input type="number" id="savings-current-amount" step="0.01" value="0" required placeholder="0.00">
-                </div>
-
-                <div class="form-group">
-                    <label>التاريخ المستهدف:</label>
-                    <input type="date" id="savings-target-date">
-                </div>
-
-                <button type="submit" class="action-btn">💾 حفظ الهدف</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- نافذة إدارة الفئات -->
-    <div class="modal" id="categories-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">إدارة الفئات</h3>
-                <button class="close" id="close-categories-modal">&times;</button>
-            </div>
-            
-            <div class="form-group">
-                <label>إضافة فئة جديدة:</label>
-                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                    <input type="text" id="new-category-name" placeholder="اسم الفئة" style="flex: 1;">
-                    <select id="new-category-type" style="width: 100px;">
-                        <option value="expense">مصروف</option>
-                        <option value="income">دخل</option>
-                    </select>
-                    <button type="button" class="action-btn" style="width: 80px; padding: 12px; margin: 0;" id="add-category-btn">إضافة</button>
-                </div>
-            </div>
-
-            <div id="categories-list">
-                <div class="setting-item">
-                    <div class="setting-icon">🍔</div>
-                    <div class="setting-info">
-                        <div class="setting-title">طعام وشراب</div>
-                        <div class="setting-description">مصروف</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- نافذة إدارة الأشخاص -->
-    <div class="modal" id="people-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">إدارة الأشخاص</h3>
-                <button class="close" id="close-people-modal">&times;</button>
-            </div>
-            
-            <div class="form-group">
-                <label>إضافة شخص جديد:</label>
-                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                    <input type="text" id="new-person-name" placeholder="اسم الشخص" style="flex: 1;">
-                    <input type="tel" id="new-person-phone" placeholder="رقم الهاتف" style="flex: 1;">
-                    <button type="button" class="action-btn" style="width: 80px; padding: 12px; margin: 0;" id="add-person-btn">إضافة</button>
-                </div>
-            </div>
-
-            <div id="people-list">
-                <div class="setting-item">
-                    <div class="setting-icon">👤</div>
-                    <div class="setting-info">
-                        <div class="setting-title">محمد أحمد</div>
-                        <div class="setting-description">+966501234567</div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-        // ============ نظام التنقل بين الواجهات ============
-        
-        let currentTab = 'dashboard';
-        
         document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            setupNavigation();
-            setupModals();
-            setupEventListeners();
-        });
+            const pinInput = document.getElementById('pinInput');
+            const pinIndicators = document.getElementById('pinIndicators');
+            const statusMessage = document.getElementById('statusMessage');
+            const loginButton = document.getElementById('loginButton');
+            const loginForm = document.getElementById('loginForm');
+            const numericKeypad = document.getElementById('numericKeypad');
+            const keypadButtons = document.querySelectorAll('.keypad-btn');
 
-        function initializeApp() {
-            const today = new Date().toISOString().split('T')[0];
-            const dateInputs = document.querySelectorAll('input[type="date"]');
-            dateInputs.forEach(input => {
-                if (!input.value) {
-                    input.value = today;
-                }
+            // الرقم السري الصحيح (يمكن تغييره)
+            const correctPin = '123456';
+
+            // إظهار لوحة المفاتيح عند التركيز على الحقل
+            pinInput.addEventListener('focus', function() {
+                numericKeypad.classList.add('show');
             });
-            updateDashboard();
-        }
 
-        function setupNavigation() {
-            const navTabs = document.querySelectorAll('.nav-tab');
-            
-            navTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const targetTab = this.getAttribute('data-tab');
-                    switchTab(targetTab);
+            // تحديث مؤشرات الخانات
+            function updateIndicators() {
+                const value = pinInput.value;
+                const dots = pinIndicators.querySelectorAll('.pin-dot');
+                
+                dots.forEach((dot, index) => {
+                    if (index < value.length) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
                 });
-            });
-            
-            switchTab('dashboard');
-        }
-
-        function switchTab(tabName) {
-            const allTabContents = document.querySelectorAll('.tab-content');
-            allTabContents.forEach(content => {
-                content.classList.remove('active');
-            });
-
-            const allNavTabs = document.querySelectorAll('.nav-tab');
-            allNavTabs.forEach(navTab => {
-                navTab.classList.remove('active');
-            });
-
-            const targetContent = document.getElementById(tabName);
-            const targetNavTab = document.querySelector(`[data-tab="${tabName}"]`);
-            
-            if (targetContent && targetNavTab) {
-                targetContent.classList.add('active');
-                targetNavTab.classList.add('active');
-                currentTab = tabName;
-
-                switch(tabName) {
-                    case 'dashboard':
-                        updateDashboard();
-                        break;
-                    case 'transactions':
-                        updateTransactionsPage();
-                        break;
-                    case 'accounts':
-                        updateAccountsPage();
-                        break;
-                    case 'debts':
-                        updateDebtsPage();
-                        break;
-                    case 'savings':
-                        updateSavingsPage();
-                        break;
-                    case 'settings':
-                        updateSettingsPage();
-                        break;
-                }
             }
-        }
 
-        function updateDashboard() {
-            document.getElementById('total-balance').textContent = '$86,996.36';
-            document.getElementById('total-income').textContent = '$12,450';
-            document.getElementById('total-expenses').textContent = '$8,320';
-            updateRecentTransactions();
-        }
-
-        function updateTransactionsPage() {
-            const allTransactionsList = document.getElementById('all-transactions');
-            
-            const transactions = [
-                {
-                    icon: '🍔',
-                    title: 'مطعم سريع',
-                    category: 'طعام وشراب',
-                    amount: '-$25.48',
-                    type: 'expense',
-                    date: 'اليوم'
-                },
-                {
-                    icon: '⛽',
-                    title: 'محطة البنزين',
-                    category: 'النقل',
-                    amount: '-$45.20',
-                    type: 'expense',
-                    date: 'أمس'
-                },
-                {
-                    icon: '🏠',
-                    title: 'إيجار المنزل',
-                    category: 'السكن',
-                    amount: '-$1,240.60',
-                    type: 'expense',
-                    date: '2 يوم'
-                },
-                {
-                    icon: '💼',
-                    title: 'راتب الشهر',
-                    category: 'الدخل الرئيسي',
-                    amount: '+$4,850.00',
-                    type: 'income',
-                    date: '3 أيام'
-                }
-            ];
-
-            allTransactionsList.innerHTML = transactions.map(transaction => `
-                <div class="transaction-item">
-                    <div class="transaction-icon ${transaction.type}">${transaction.icon}</div>
-                    <div class="transaction-details">
-                        <div class="transaction-title">${transaction.title}</div>
-                        <div class="transaction-category">${transaction.category} • ${transaction.date}</div>
-                    </div>
-                    <div class="transaction-amount ${transaction.type}">${transaction.amount}</div>
-                </div>
-            `).join('');
-
-            setupPeriodFilters();
-        }
-
-        function updateAccountsPage() {
-            const accountsList = document.getElementById('accounts-list');
-            
-            const accounts = [
-                {
-                    type: 'حساب بنكي',
-                    name: 'البنك الأهلي',
-                    balance: '$45,250.00'
-                },
-                {
-                    type: 'نقدي',
-                    name: 'المحفظة',
-                    balance: '$1,240.36'
-                },
-                {
-                    type: 'بطاقة ائتمان',
-                    name: 'فيزا البنك الأهلي',
-                    balance: '$3,500.00'
-                },
-                {
-                    type: 'حساب توفير',
-                    name: 'حساب التوفير',
-                    balance: '$37,006.00'
-                }
-            ];
-
-            accountsList.innerHTML = accounts.map(account => `
-                <div class="account-card">
-                    <div class="account-type">${account.type}</div>
-                    <div class="account-name">${account.name}</div>
-                    <div class="account-balance">${account.balance}</div>
-                </div>
-            `).join('');
-        }
-
-        function updateDebtsPage() {
-            // تحديث الديون لي
-            const debtsToMe = document.getElementById('debts-to-me');
-            debtsToMe.innerHTML = `
-                <div class="debt-card debt-to-me">
-                    <div class="debt-info">
-                        <h4>محمد أحمد</h4>
-                        <p>مستحق منذ 5 أيام • قرض شخصي</p>
-                    </div>
-                    <div class="debt-amount positive">+$500.00</div>
-                </div>
-                <div class="debt-card debt-to-me">
-                    <div class="debt-info">
-                        <h4>سارة خالد</h4>
-                        <p>مستحق منذ 12 يوم • مساعدة طارئة</p>
-                    </div>
-                    <div class="debt-amount positive">+$250.00</div>
-                </div>
-            `;
-
-            // تحديث الديون عليّ
-            const debtsFromMe = document.getElementById('debts-from-me');
-            debtsFromMe.innerHTML = `
-                <div class="debt-card debt-from-me">
-                    <div class="debt-info">
-                        <h4>علي حسن</h4>
-                        <p>مستحق خلال 3 أيام • أقساط الهاتف</p>
-                    </div>
-                    <div class="debt-amount negative">-$800.00</div>
-                </div>
-            `;
-        }
-
-        function updateSavingsPage() {
-            const savingsGoals = document.getElementById('savings-goals');
-            
-            const goals = [
-                {
-                    name: 'سيارة جديدة',
-                    current: 15000,
-                    target: 25000
-                },
-                {
-                    name: 'إجازة صيفية',
-                    current: 3200,
-                    target: 5000
-                }
-            ];
-
-            savingsGoals.innerHTML = goals.map(goal => {
-                const percentage = Math.round((goal.current / goal.target) * 100);
-                return `
-                    <div class="account-card">
-                        <div class="account-type">هدف الادخار</div>
-                        <div class="account-name">${goal.name}</div>
-                        <div class="account-balance">${goal.current.toLocaleString()} / ${goal.target.toLocaleString()}</div>
-                        <div style="margin-top: 16px;">
-                            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
-                                <div style="background: var(--gradient-cosmic); height: 100%; width: ${percentage}%; border-radius: 4px; box-shadow: var(--glow-blue); transition: width 0.5s ease;"></div>
-                            </div>
-                            <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">${percentage}% مكتمل</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function updateSettingsPage() {
-            console.log('Settings page loaded');
-        }
-
-        function updateRecentTransactions() {
-            const recentTransactionsList = document.getElementById('recent-transactions');
-            
-            const recentTransactions = [
-                {
-                    icon: '🍔',
-                    title: 'مطعم سريع',
-                    category: 'طعام وشراب',
-                    amount: '-$25.48',
-                    type: 'expense'
-                },
-                {
-                    icon: '🏠',
-                    title: 'إيجار المنزل',
-                    category: 'السكن',
-                    amount: '-$1,240.60',
-                    type: 'expense'
-                },
-                {
-                    icon: '💼',
-                    title: 'راتب الشهر',
-                    category: 'الدخل الرئيسي',
-                    amount: '+$4,850.00',
-                    type: 'income'
-                }
-            ];
-
-            recentTransactionsList.innerHTML = recentTransactions.map(transaction => `
-                <div class="transaction-item">
-                    <div class="transaction-icon ${transaction.type}">${transaction.icon}</div>
-                    <div class="transaction-details">
-                        <div class="transaction-title">${transaction.title}</div>
-                        <div class="transaction-category">${transaction.category}</div>
-                    </div>
-                    <div class="transaction-amount ${transaction.type}">${transaction.amount}</div>
-                </div>
-            `).join('');
-        }
-
-        // ============ إعداد النوافذ المنبثقة ============
-        
-        function setupModals() {
-            const modals = document.querySelectorAll('.modal');
-            const closeButtons = document.querySelectorAll('.close');
-
-            closeButtons.forEach(closeBtn => {
-                closeBtn.addEventListener('click', function() {
-                    const modal = this.closest('.modal');
-                    if (modal) {
-                        modal.style.display = 'none';
-                    }
-                });
-            });
-
-            modals.forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.style.display = 'none';
-                    }
-                });
-            });
-        }
-
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'block';
-                setTimeout(() => {
-                    const firstInput = modal.querySelector('input, select');
-                    if (firstInput) {
-                        firstInput.focus();
-                    }
-                }, 100);
-            }
-        }
-
-        // ============ إعداد أحداث الأزرار ============
-        
-        function setupEventListeners() {
-            document.getElementById('add-income-btn')?.addEventListener('click', () => {
-                openModal('transaction-modal');
-                document.getElementById('transaction-type').value = 'income';
-            });
-
-            document.getElementById('add-expense-btn')?.addEventListener('click', () => {
-                openModal('transaction-modal');
-                document.getElementById('transaction-type').value = 'expense';
-            });
-
-            document.getElementById('add-transaction-btn')?.addEventListener('click', () => openModal('transaction-modal'));
-            document.getElementById('add-account-btn')?.addEventListener('click', () => openModal('account-modal'));
-            document.getElementById('add-debt-btn')?.addEventListener('click', () => openModal('debt-modal'));
-            document.getElementById('add-savings-goal-btn')?.addEventListener('click', () => openModal('savings-modal'));
-
-            document.getElementById('manage-categories-btn')?.addEventListener('click', () => openModal('categories-modal'));
-            document.getElementById('manage-people-btn')?.addEventListener('click', () => openModal('people-modal'));
-
-            document.getElementById('fab-add')?.addEventListener('click', () => {
-                switch(currentTab) {
-                    case 'dashboard':
-                    case 'transactions':
-                        openModal('transaction-modal');
-                        break;
-                    case 'accounts':
-                        openModal('account-modal');
-                        break;
-                    case 'debts':
-                        openModal('debt-modal');
-                        break;
-                    case 'savings':
-                        openModal('savings-modal');
-                        break;
-                    default:
-                        openModal('transaction-modal');
-                        break;
+            // التحكم في إدخال الأرقام فقط
+            pinInput.addEventListener('input', function(e) {
+                // إزالة أي شيء ليس رقماً
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
+                // تحديث المؤشرات
+                updateIndicators();
+                
+                // إخفاء رسالة الخطأ إذا كانت موجودة
+                hideStatusMessage();
+                
+                // تفعيل زر الدخول إذا تم إدخال 6 أرقام
+                if (this.value.length === 6) {
+                    loginButton.disabled = false;
+                    // إرسال تلقائي بعد ثانية واحدة
+                    setTimeout(() => {
+                        if (pinInput.value.length === 6) {
+                            loginForm.dispatchEvent(new Event('submit'));
+                        }
+                    }, 1000);
+                } else {
+                    loginButton.disabled = true;
                 }
             });
 
-            document.getElementById('see-all-transactions')?.addEventListener('click', () => {
-                switchTab('transactions');
-            });
-
-            document.getElementById('export-data-btn')?.addEventListener('click', () => {
-                showNotification('سيتم تصدير البيانات قريباً');
-            });
-
-            document.getElementById('clear-all-data-btn')?.addEventListener('click', () => {
-                if (confirm('هل أنت متأكد من رغبتك في مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
-                    showNotification('تم مسح البيانات', 'warning');
-                }
-            });
-        }
-
-        function setupPeriodFilters() {
-            const periodButtons = document.querySelectorAll('.period-btn');
-            
-            periodButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    periodButtons.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
+            // لوحة المفاتيح الرقمية
+            keypadButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const number = this.dataset.number;
+                    const action = this.dataset.action;
                     
-                    const period = this.getAttribute('data-period');
-                    filterTransactionsByPeriod(period);
+                    if (number && pinInput.value.length < 6) {
+                        pinInput.value += number;
+                        pinInput.dispatchEvent(new Event('input'));
+                    } else if (action === 'backspace') {
+                        pinInput.value = pinInput.value.slice(0, -1);
+                        pinInput.dispatchEvent(new Event('input'));
+                    } else if (action === 'clear') {
+                        pinInput.value = '';
+                        pinInput.dispatchEvent(new Event('input'));
+                    }
+                    
+                    // تأثير بصري للضغط
+                    this.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
                 });
             });
-        }
 
-        function filterTransactionsByPeriod(period) {
-            console.log(`تصفية المعاملات حسب الفترة: ${period}`);
-        }
+            // دعم لوحة المفاتيح
+            pinInput.addEventListener('keydown', function(e) {
+                // السماح بالمفاتيح المفيدة فقط
+                const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight'];
+                const isNumber = e.key >= '0' && e.key <= '9';
+                
+                if (!allowedKeys.includes(e.key) && !isNumber) {
+                    e.preventDefault();
+                }
+                
+                // إرسال عند الضغط على Enter
+                if (e.key === 'Enter' && this.value.length === 6) {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
 
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            const bgColor = type === 'success' ? 'var(--gradient-forest)' : 'var(--gradient-fire)';
-            notification.style.cssText = `
-                position: fixed;
-                top: 80px;
-                right: 20px;
-                background: ${bgColor};
-                color: white;
-                padding: 16px 24px;
-                border-radius: var(--border-radius);
-                z-index: 2000;
-                font-weight: 600;
-                box-shadow: var(--shadow-neumorphism), var(--glow-blue);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-            `;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        // منع تحديث الصفحة عند إرسال النماذج (للاختبار)
-        document.addEventListener('submit', function(e) {
-            e.preventDefault();
-            showNotification('تم حفظ البيانات بنجاح!');
-            
-            const modal = e.target.closest('.modal');
-            if (modal) {
-                modal.style.display = 'none';
+            // عرض رسالة الحالة
+            function showStatusMessage(message, type = 'error') {
+                statusMessage.textContent = message;
+                statusMessage.className = `status-message ${type} show`;
             }
-        });
 
-        console.log('🚀 تم تحميل تطبيق إدارة الأموال الشخصية بالتصميم الجديد بنجاح!');
+            // إخفاء رسالة الحالة
+            function hideStatusMessage() {
+                statusMessage.classList.remove('show');
+            }
+
+            // تسجيل الدخول
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const enteredPin = pinInput.value;
+                
+                if (enteredPin.length !== 6) {
+                    showStatusMessage('يرجى إدخال 6 أرقام', 'error');
+                    return;
+                }
+                
+                // تفعيل حالة التحميل
+                loginButton.classList.add('loading');
+                loginButton.disabled = true;
+                
+                // محاكاة التحقق من الخادم
+                setTimeout(() => {
+                    if (enteredPin === correctPin) {
+                        showStatusMessage('تم تسجيل الدخول بنجاح!', 'success');
+                        
+                        // انتقال إلى الصفحة الرئيسية بعد ثانيتين
+                        setTimeout(() => {
+                            // يمكن استبدال هذا بالانتقال الفعلي
+                            window.location.href = 'home.html';
+                        }, 2000);
+                        
+                    } else {
+                        showStatusMessage('الرقم السري غير صحيح. حاول مرة أخرى', 'error');
+                        
+                        // مسح الحقل بعد خطأ
+                        setTimeout(() => {
+                            pinInput.value = '';
+                            updateIndicators();
+                            loginButton.classList.remove('loading');
+                            loginButton.disabled = true;
+                        }, 1500);
+                    }
+                }, 1500);
+            });
+
+            // تأثيرات إضافية عند التحميل
+            setTimeout(() => {
+                pinInput.focus();
+            }, 500);
+
+            // منع إرسال النموذج الافتراضي
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+            });
+
+            // إنشاء جسيمات إضافية ديناميكياً
+            function createParticle() {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 4 + 's';
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, 8000);
+            }
+
+            // إنشاء جسيمات كل 3 ثوانٍ
+            setInterval(createParticle, 3000);
+
+            console.log('🔐 صفحة تسجيل الدخول جاهزة');
+            console.log('💡 الرقم السري الافتراضي: 123456');
+        });
     </script>
 </body>
 </html>

@@ -1,575 +1,681 @@
-/* app.js — UI / Logic Only (No persistence)
-   -----------------------------------------
-   👈 متوقع توفّر كائن global باسم `store` في ملف التخزين لاحقًا.
-   واجهة `store` المقترحة (Promisified):
-   - store.init()
-   - store.getSettings() -> { currency, locale, dateStart, theme, ... }
-   - store.getDashboardSummary() -> { totalBalance, monthIncome, monthExpense, netSaving, savingRate, spendRate }
-   - store.getLatestTransactions(limit=5) -> [ {id, dateISO, amount, type:'income'|'expense', category, desc, accountName} ]
-   - store.getAlerts() -> [ { id, type:'info'|'warn'|'error'|'success', text } ]
-   - store.clearAlerts()
-   - store.listAccountsSummary() -> [ {id, name, type, balance, income, expense, opsCount, lastActivityISO, status} ]
-   - store.getSelectLists() -> { categories:[{id,name}], accounts:[{id,name}] }
-   - store.addTransaction(tx) -> {ok, id}
-   - store.addDebt(d) -> {ok, id}
-   - store.addObligation(o) -> {ok, id}
-   - store.listObligations() -> [...]
-   - store.addBill(b) -> {ok, id}
-   - store.addFine(f) -> {ok, id}
-   - store.getReports() -> {
-       totalIncome, totalExpense, totalSaving, savingRate,
-       byCategory:[{category, amount, rate}],
-       receivables, payables,
-       kpis:{ saving, fixedOblig, dailySpend, emergency }
-     }
-   ملاحظة: يمكنك تعديل/توسيع الواجهة لاحقًا وسأكيّف الكود بسرعة.
+/* app.js — واجهة وتفاعلات التطبيق
+   يعتمد على FinanceStorage من storage.js
 */
 
 (() => {
-  "use strict";
+  // ---------- Utilities ----------
+  const $  = (sel, ctx = document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-  // ---------- Helpers ----------
-  const $ = (id) => document.getElementById(id);
-  const q = (sel, root = document) => root.querySelector(sel);
-  const qa = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const SAR_FMT = new Intl.NumberFormat("ar-SA", { style: "currency", currency: "SAR", maximumFractionDigits: 2 });
+  const NUM_FMT = new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 0 });
 
-  const defaultLocale = "ar-SA";
-  const nf = (n, locale) =>
-    isFinite(n) ? n.toLocaleString(locale || defaultLocale, { maximumFractionDigits: 2 }) : "—";
-  const nf0 = (n, locale) =>
-    isFinite(n) ? n.toLocaleString(locale || defaultLocale, { maximumFractionDigits: 0 }) : "—";
-  const df = (iso, locale) => {
-    if (!iso) return "—";
+  const formatCurrency = (n) => (isFinite(n) ? SAR_FMT.format(+n || 0) : "—");
+  const formatDate = (iso) => {
     try {
       const d = new Date(iso);
-      return new Intl.DateTimeFormat(locale || defaultLocale, {
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-      }).format(d);
-    } catch {
-      return "—";
-    }
+      return d.toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "2-digit" });
+    } catch { return iso || ""; }
+  };
+  const parseAmount = (v) => {
+    const n = typeof v === "number" ? v : parseFloat(String(v).replace(/[^\d.-]/g, ""));
+    return isFinite(n) ? n : 0;
   };
 
-  const todayStr = (locale) =>
-    new Intl.DateTimeFormat(locale || defaultLocale, {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(new Date());
+  // Toast notification (مستقل عن CSS خارجي)
+  function showToast(message, type = "success") {
+    const toast = document.createElement("div");
+    const bg = type === "success" ? "linear-gradient(135deg,#16a34a66,#16a34a22)" : "linear-gradient(135deg,#ef444466,#ef444422)";
+    toast.style.cssText = `
+      position: fixed; top: 80px; right: 20px; z-index: 2000;
+      color: #fff; padding: 14px 18px; border-radius: 12px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      background: ${bg}; font-weight: 700; max-width: 80vw;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
 
-  const toast = (msg, opts = {}) => {
-    const el = $("toast");
-    if (!el) return;
-    el.textContent = msg;
-    el.classList.remove("hidden");
-    if (opts.type) {
-      el.dataset.type = opts.type;
-    }
-    window.clearTimeout(toast._t);
-    toast._t = window.setTimeout(() => el.classList.add("hidden"), opts.timeout || 2600);
-  };
+  // ---------- App Core ----------
+  class FinanceApp {
+    constructor() {
+      // يتطلب FinanceStorage من storage.js
+      this.store = new FinanceStorage();
 
-  const openDialog = (id) => {
-    const dlg = $(id);
-    if (dlg && typeof dlg.showModal === "function") dlg.showModal();
-  };
-  const closeDialog = (id) => {
-    const dlg = $(id);
-    if (dlg && typeof dlg.close === "function") dlg.close();
-  };
+      // الحالة
+      this.currentTab = "dashboard";
+      this.activePeriod = "week"; // للفلاتر
 
-  // حراسة ناعمة عند غياب ملف التخزين
-  const hasStore = () => typeof window.store === "object" && window.store !== null;
-  const safe = async (fnName, ...args) => {
-    if (!hasStore()) {
-      console.warn(`[store missing] call skipped: ${fnName}`, args);
-      toast("⚠️ ربط التخزين غير مفعّل. سيتم التفعيل عند إضافة ملف التخزين.", { type: "warn" });
-      return null;
-    }
-    try {
-      const fn = window.store[fnName];
-      if (typeof fn !== "function") {
-        console.warn(`[store method missing] ${fnName}`);
-        toast("⚠️ دالة التخزين غير متاحة حاليًا.", { type: "warn" });
-        return null;
+      // تشغيل init مهما كان توقيت تحميل السكربت
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => this.init());
+      } else {
+        this.init();
       }
-      return await fn(...args);
-    } catch (e) {
-      console.error(`[store error] ${fnName}`, e);
-      toast("حدث خطأ أثناء التعامل مع التخزين.", { type: "error" });
-      return null;
     }
-  };
 
-  // ---------- State ----------
-  const State = {
-    locale: defaultLocale,
-    currency: "SAR",
-    theme: "system",
-    navSection: "dashboard",
-  };
+    init() {
+      this.ensureDefaultDates();
+      this.setupNavigation();
+      this.setupModals();
+      this.setupButtons();
+      this.setupForms();
 
-  // ---------- Navigation ----------
-  function initNav() {
-    const links = qa(".nav-link");
-    links.forEach((a) => {
-      a.addEventListener("click", (e) => {
+      // مزامنة القوائم من التخزين
+      this.renderAccountsSelect();
+      this.renderCategoriesSelect();
+      this.renderPeopleList();
+
+      this.refreshAllViews();
+    }
+
+    // ضبط قيمة اليوم لكل حقول التاريخ الفارغة
+    ensureDefaultDates() {
+      const today = new Date().toISOString().split("T")[0];
+      $$('input[type="date"]').forEach((el) => { if (!el.value) el.value = today; });
+    }
+
+    // ---------- Navigation ----------
+    setupNavigation() {
+      $$(".nav-tab").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const tab = btn.getAttribute("data-tab");
+          this.switchTab(tab);
+        });
+      });
+
+      // "عرض الكل" في لوحة التحكم
+      $("#see-all-transactions")?.addEventListener("click", () => this.switchTab("transactions"));
+
+      // فلاتر الفترة في صفحة المعاملات
+      this.bindPeriodFilters();
+      this.switchTab("dashboard");
+    }
+
+    switchTab(tabName) {
+      if (!tabName) return;
+      $$(".tab-content").forEach((c) => c.classList.remove("active"));
+      $$(".nav-tab").forEach((b) => b.classList.remove("active"));
+
+      const content = $("#" + tabName);
+      const navBtn  = $(`.nav-tab[data-tab="${tabName}"]`);
+      if (content && navBtn) {
+        content.classList.add("active");
+        navBtn.classList.add("active");
+        this.currentTab = tabName;
+      }
+
+      // تحديث الصفحة الحالية
+      switch (tabName) {
+        case "dashboard":    return this.updateDashboard();
+        case "transactions": return this.updateTransactionsView();
+        case "accounts":     return this.updateAccountsView();
+        case "debts":        return this.updateDebtsView();
+        case "savings":      return this.updateSavingsView();
+        case "settings":     return this.updateSettingsView();
+      }
+    }
+
+    bindPeriodFilters() {
+      $$(".period-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          $$(".period-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          this.activePeriod = btn.getAttribute("data-period") || "week";
+          this.updateTransactionsView();
+        });
+      });
+    }
+
+    // ---------- Modals ----------
+    setupModals() {
+      // إغلاق بالأزرار
+      $$(".modal .close").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const modal = e.currentTarget.closest(".modal");
+          if (modal) this.closeModal(modal.id);
+        });
+      });
+      // إغلاق عند الضغط خارج المحتوى
+      $$(".modal").forEach((m) => {
+        m.addEventListener("click", (e) => {
+          if (e.target === m) this.closeModal(m.id);
+        });
+      });
+    }
+
+    openModal(id) {
+      const m = $("#" + id);
+      if (!m) return;
+      m.style.display = "block";
+      setTimeout(() => {
+        const first = m.querySelector("input,select,textarea,button");
+        first?.focus();
+      }, 60);
+    }
+
+    closeModal(id) {
+      const m = $("#" + id);
+      if (!m) return;
+      m.style.display = "none";
+      // إعادة ضبط النموذج داخلها
+      m.querySelectorAll("form").forEach((f) => f.reset());
+      this.ensureDefaultDates();
+      // حدّث القوائم بعد الإغلاق (لو أضفت فئات/أشخاص)
+      this.renderAccountsSelect();
+      this.renderCategoriesSelect();
+      this.renderPeopleList();
+    }
+
+    // ---------- Buttons / Quick Actions ----------
+    setupButtons() {
+      $("#add-income-btn")?.addEventListener("click", () => {
+        this.renderAccountsSelect();
+        this.openModal("transaction-modal");
+        $("#transaction-type").value = "income";
+      });
+      $("#add-expense-btn")?.addEventListener("click", () => {
+        this.renderAccountsSelect();
+        this.openModal("transaction-modal");
+        $("#transaction-type").value = "expense";
+      });
+
+      $("#add-transaction-btn")?.addEventListener("click", () => {
+        this.renderAccountsSelect();
+        this.openModal("transaction-modal");
+      });
+      $("#add-account-btn")?.addEventListener("click", () => this.openModal("account-modal"));
+      $("#add-debt-btn")?.addEventListener("click", () => {
+        this.injectDebtAccountSelectIfMissing();
+        this.renderAccountsSelect();
+        this.openModal("debt-modal");
+      });
+      $("#add-savings-goal-btn")?.addEventListener("click", () => this.openModal("savings-modal"));
+
+      // الإعدادات
+      $("#manage-categories-btn")?.addEventListener("click", () => this.openModal("categories-modal"));
+      $("#manage-people-btn")?.addEventListener("click", () => this.openModal("people-modal"));
+
+      // تصدير/مسح البيانات
+      $("#export-data-btn")?.addEventListener("click", async () => {
+        try {
+          const { filename, blob } = await this.store.exportData();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = filename;
+          document.body.appendChild(a); a.click();
+          a.remove(); URL.revokeObjectURL(url);
+          showToast("تم تصدير البيانات بنجاح ✅");
+        } catch (e) {
+          console.error(e);
+          showToast("تعذر تصدير البيانات", "error");
+        }
+      });
+
+      $("#clear-all-data-btn")?.addEventListener("click", async () => {
+        if (!confirm("هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع.")) return;
+        await this.store.clearAllData();
+        this.refreshAllViews();
+        showToast("تم مسح جميع البيانات 🧹");
+      });
+    }
+
+    // ---------- Forms ----------
+    setupForms() {
+      // معاملات
+      $("#transaction-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const sec = a.dataset.section;
-        navigateTo(sec);
+        const data = {
+          type: $("#transaction-type").value,
+          amount: parseAmount($("#transaction-amount").value),
+          description: $("#transaction-description").value?.trim(),
+          category: $("#transaction-category").value,
+          account: $("#transaction-account").value,
+          date: $("#transaction-date").value,
+          notes: $("#transaction-notes").value?.trim(),
+          createdAt: new Date().toISOString(),
+        };
+        if (!data.type || !data.amount || !data.category || !data.account || !data.date) {
+          return showToast("الرجاء إكمال الحقول المطلوبة", "error");
+        }
+        await this.store.addTransaction(data);
+        this.closeModal("transaction-modal");
+        this.refreshAllViews();
+        showToast("تم حفظ المعاملة 💾");
       });
-    });
 
-    // hash-based navigation
-    const hash = (location.hash || "#dashboard").replace("#", "");
-    navigateTo(hash);
-
-    // sidebar toggle (mobile)
-    const btn = $("btnToggleSidebar");
-    const sidebar = $("sidebar");
-    if (btn && sidebar) {
-      btn.addEventListener("click", () => {
-        sidebar.classList.toggle("is-open");
-        btn.setAttribute(
-          "aria-expanded",
-          sidebar.classList.contains("is-open") ? "true" : "false"
-        );
+      // حسابات
+      $("#account-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = {
+          name: $("#account-name").value?.trim(),
+          type: $("#account-type").value,
+          initialBalance: parseAmount($("#account-initial-balance").value),
+          balance: parseAmount($("#account-initial-balance").value),
+          createdAt: new Date().toISOString(),
+        };
+        if (!data.name || !data.type) return showToast("أكمل بيانات الحساب", "error");
+        await this.store.addAccount(data);
+        this.closeModal("account-modal");
+        this.updateAccountsView();
+        this.updateDashboard();
+        this.renderAccountsSelect();
+        showToast("تم إضافة الحساب ✅");
       });
-      // Close sidebar when clicking a link (on mobile)
-      qa(".sidebar .nav-link").forEach((link) =>
-        link.addEventListener("click", () => sidebar.classList.remove("is-open"))
+
+      // حقن خانة حساب للدَّين إن لزم
+      this.injectDebtAccountSelectIfMissing();
+
+      // ديون
+      $("#debt-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = {
+          type: $("#debt-type").value,           // to-me | from-me
+          personId: $("#debt-person").value,
+          amount: parseAmount($("#debt-amount").value),
+          description: $("#debt-description").value?.trim(),
+          date: $("#debt-date").value,
+          dueDate: $("#debt-date").value,
+          status: "pending",
+          notes: "",
+          account: $("#debt-account")?.value || "",
+          affectBalance: true
+        };
+        if (!data.type || !data.personId || !data.amount || !data.date) {
+          return showToast("أكمل بيانات الدين", "error");
+        }
+        await this.store.addDebt(data);
+        this.closeModal("debt-modal");
+        this.updateDebtsView();
+        this.updateDashboard();
+        showToast("تم حفظ الدين 🤝");
+      });
+
+      // أهداف الادخار
+      $("#savings-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = {
+          name: $("#savings-goal-name").value?.trim(),
+          targetAmount: parseAmount($("#savings-target-amount").value),
+          currentAmount: parseAmount($("#savings-current-amount").value),
+          targetDate: $("#savings-target-date").value || "",
+          description: "",
+          createdAt: new Date().toISOString(),
+        };
+        if (!data.name || !data.targetAmount) {
+          return showToast("أدخل اسم الهدف والمبلغ المستهدف", "error");
+        }
+        await this.store.addSavingsGoal(data);
+        this.closeModal("savings-modal");
+        this.updateSavingsView();
+        this.updateDashboard();
+        showToast("تم إضافة هدف الادخار 🎯");
+      });
+
+      // فئات
+      $("#add-category-btn")?.addEventListener("click", async () => {
+        const name = $("#new-category-name").value?.trim();
+        const type = $("#new-category-type").value;
+        if (!name) return showToast("أدخل اسم الفئة", "error");
+        await this.store.addCategory({ name, type, icon: "🏷️", color: "#ccc" });
+        $("#new-category-name").value = "";
+        this.renderCategoriesList();
+        this.renderCategoriesSelect();
+        showToast("تمت إضافة الفئة 📋");
+      });
+
+      // أشخاص
+      $("#add-person-btn")?.addEventListener("click", async () => {
+        const name = $("#new-person-name").value?.trim();
+        const phone = $("#new-person-phone").value?.trim();
+        if (!name) return showToast("أدخل اسم الشخص", "error");
+        await this.store.addPerson({ name, phone, email: "", notes: "" });
+        $("#new-person-name").value = "";
+        $("#new-person-phone").value = "";
+        this.renderPeopleList();
+        showToast("تمت إضافة الشخص 👤");
+      });
+    }
+
+    // حقن خانة حساب في نموذج الدَّين إذا لم توجد
+    injectDebtAccountSelectIfMissing() {
+      const debtForm = $("#debt-form");
+      if (debtForm && !$("#debt-account")) {
+        const grp = document.createElement("div");
+        grp.className = "form-group";
+        grp.innerHTML = `
+          <label>الحساب:</label>
+          <select id="debt-account" required></select>
+        `;
+        const where = debtForm.querySelector(".form-group:nth-child(2)") || debtForm.firstElementChild;
+        debtForm.insertBefore(grp, where?.nextSibling || null);
+        this.renderAccountsSelect();
+      }
+    }
+
+    // ---------- Views ----------
+    refreshAllViews() {
+      this.updateDashboard();
+      if ($("#transactions")?.classList.contains("active")) this.updateTransactionsView();
+      if ($("#accounts")?.classList.contains("active")) this.updateAccountsView();
+      if ($("#debts")?.classList.contains("active")) this.updateDebtsView();
+      if ($("#savings")?.classList.contains("active")) this.updateSavingsView();
+      if ($("#settings")?.classList.contains("active")) this.updateSettingsView();
+    }
+
+    // لوحة التحكم
+    updateDashboard() {
+      const balance = this.store.calculateTotalBalance();
+      const inc = this.store.calculateMonthlyIncome(new Date());
+      const exp = this.store.calculateMonthlyExpenses(new Date());
+
+      $("#total-balance").textContent = formatCurrency(balance);
+      $("#total-income").textContent  = formatCurrency(inc);
+      $("#total-expenses").textContent = formatCurrency(exp);
+
+      // أحدث معاملات
+      const recent = this.store.getTransactions().slice(-3).reverse();
+      const list = $("#recent-transactions");
+      if (list) list.innerHTML = recent.map(t => this.transactionItemHTML(t)).join("") || this.emptyHint("لا توجد معاملات بعد");
+    }
+
+    // المعاملات + الفلاتر
+    updateTransactionsView() {
+      const tx = this.store.getTransactionsByPeriod(this.activePeriod);
+      const list = $("#all-transactions");
+      if (list) list.innerHTML = tx.map(t => this.transactionItemHTML(t, true)).join("") || this.emptyHint("لا توجد معاملات في هذه الفترة");
+    }
+
+    // الحسابات (مع أزرار تعديل/حذف)
+    updateAccountsView() {
+      const cards = this.store.getAccounts();
+      const wrap = $("#accounts-list");
+      if (!wrap) return;
+      wrap.innerHTML = cards.map(acc => `
+        <div class="account-card" data-id="${acc.id}">
+          <div class="account-type">${this.mapAccountType(acc.type)}</div>
+          <div class="account-name">${acc.name}</div>
+          <div class="account-balance">${formatCurrency(acc.balance)}</div>
+          <div class="account-actions" style="margin-top:8px; display:flex; gap:8px;">
+            <button class="edit-account">تعديل</button>
+            <button class="delete-account">حذف</button>
+          </div>
+        </div>
+      `).join("") || this.emptyHint("لا توجد حسابات — أضف حسابًا جديدًا");
+
+      // تفويض أحداث (مرة في كل إعادة رسم)
+      wrap.addEventListener("click", async (e) => {
+        const card = e.target.closest(".account-card");
+        if (!card) return;
+        const id = card.getAttribute("data-id");
+
+        if (e.target.classList.contains("edit-account")) {
+          const acc = this.store.getAccounts().find(a => a.id === id);
+          if (!acc) return;
+          const newName = prompt("اسم الحساب:", acc.name);
+          if (!newName) return;
+          const newType = prompt("نوع الحساب (cash/bank/credit/savings):", acc.type) || acc.type;
+          const newBalanceStr = prompt("الرصيد الحالي:", acc.balance);
+          const newBalance = parseAmount(newBalanceStr);
+          await this.store.updateAccount(id, { name: newName.trim(), type: newType, balance: newBalance });
+          this.updateAccountsView(); this.updateDashboard(); this.renderAccountsSelect();
+          showToast("تم تحديث الحساب ✅");
+        }
+
+        if (e.target.classList.contains("delete-account")) {
+          if (!confirm("حذف هذا الحساب؟ إذا كانت هناك معاملات مرتبطة سيتم منع الحذف.")) return;
+          const ok = await this.store.deleteAccount(id);
+          if (!ok) return showToast("لا يمكن حذف الحساب لوجود معاملات مرتبطة به", "error");
+          this.updateAccountsView(); this.updateDashboard(); this.renderAccountsSelect();
+          showToast("تم حذف الحساب 🗑️");
+        }
+      }, { once: true });
+
+      // تحديث قائمة الحسابات في النماذج
+      this.renderAccountsSelect();
+    }
+
+    // الديون (مع سداد/استرداد)
+    updateDebtsView() {
+      const toMe   = this.store.getDebtsToMe();
+      const fromMe = this.store.getDebtsFromMe();
+
+      const toMeEl   = $("#debts-to-me");
+      const fromMeEl = $("#debts-from-me");
+
+      if (toMeEl) {
+        toMeEl.innerHTML = toMe.map(d => `
+          <div class="debt-card debt-to-me" data-id="${d.id}">
+            <div class="debt-info">
+              <h4>${this.personName(d.personId)}</h4>
+              <p>${formatDate(d.date)} • ${d.description || "—"} • الحالة: ${d.status}</p>
+            </div>
+            <div class="debt-amount positive">+${formatCurrency(d.amount)}</div>
+            <div class="debt-actions" style="margin-top:8px; display:flex; gap:8px;">
+              <button class="receive-debt">استرداد</button>
+            </div>
+          </div>
+        `).join("") || this.emptyHint("لا توجد ديون لك");
+      }
+
+      if (fromMeEl) {
+        fromMeEl.innerHTML = fromMe.map(d => `
+          <div class="debt-card debt-from-me" data-id="${d.id}">
+            <div class="debt-info">
+              <h4>${this.personName(d.personId)}</h4>
+              <p>${formatDate(d.date)} • ${d.description || "—"} • الحالة: ${d.status}</p>
+            </div>
+            <div class="debt-amount negative">-${formatCurrency(d.amount)}</div>
+            <div class="debt-actions" style="margin-top:8px; display:flex; gap:8px;">
+              <button class="pay-debt">سداد</button>
+            </div>
+          </div>
+        `).join("") || this.emptyHint("لا توجد ديون عليك");
+      }
+
+      const handler = async (e) => {
+        const card = e.target.closest(".debt-card");
+        if (!card) return;
+        const id = card.getAttribute("data-id");
+        if (e.target.classList.contains("receive-debt")) {
+          const amt = parseAmount(prompt("المبلغ المسترد:", ""));
+          if (!amt) return;
+          const accName = prompt("اسم الحساب الذي سيتم إيداعه فيه:", "محفظة نقدية");
+          const ok = await this.store.receiveDebt(id, amt, accName);
+          if (!ok) return showToast("تعذر الاسترداد. تأكد من الحساب.", "error");
+          this.updateDebtsView(); this.updateDashboard();
+          showToast("تم الاسترداد ✅");
+        }
+        if (e.target.classList.contains("pay-debt")) {
+          const amt = parseAmount(prompt("مبلغ السداد:", ""));
+          if (!amt) return;
+          const accName = prompt("اسم الحساب الذي سيتم السداد منه:", "محفظة نقدية");
+          const ok = await this.store.payDebt(id, amt, accName);
+          if (!ok) return showToast("تعذر السداد. تأكد من الحساب.", "error");
+          this.updateDebtsView(); this.updateDashboard();
+          showToast("تم السداد ✅");
+        }
+      };
+
+      toMeEl?.addEventListener("click", handler, { once: true });
+      fromMeEl?.addEventListener("click", handler, { once: true });
+    }
+
+    // الادخار (إيداع/تعديل)
+    updateSavingsView() {
+      const goals = this.store.getSavingsGoals();
+      const wrap = $("#savings-goals");
+      if (!wrap) return;
+      wrap.innerHTML = goals.map((g) => {
+        const pct = Math.min(100, Math.round((parseAmount(g.currentAmount) / Math.max(1, parseAmount(g.targetAmount))) * 100));
+        return `
+          <div class="account-card" data-id="${g.id}">
+            <div class="account-type">هدف الادخار</div>
+            <div class="account-name">${g.name}</div>
+            <div class="account-balance">${NUM_FMT.format(g.currentAmount)} / ${NUM_FMT.format(g.targetAmount)}</div>
+            <div style="margin-top: 16px;">
+              <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+                <div style="height: 100%; width: ${pct}%; border-radius: 4px; transition: width .5s ease;"></div>
+              </div>
+              <div style="margin-top:8px; font-size:12px;">${pct}% مكتمل ${g.targetDate ? `• الهدف: ${formatDate(g.targetDate)}` : ""}</div>
+            </div>
+            <div class="goal-actions" style="margin-top:8px; display:flex; gap:8px;">
+              <button class="contribute-goal">إيداع للهدف</button>
+              <button class="edit-goal">تعديل</button>
+            </div>
+          </div>
+        `;
+      }).join("") || this.emptyHint("لا توجد أهداف ادخار بعد");
+
+      wrap.addEventListener("click", async (e) => {
+        const card = e.target.closest(".account-card");
+        if (!card) return;
+        const id = card.getAttribute("data-id");
+
+        if (e.target.classList.contains("contribute-goal")) {
+          const amt = parseAmount(prompt("المبلغ الذي تريد إيداعه:", ""));
+          if (!amt) return;
+          const accName = prompt("اسم الحساب الذي سيتم السحب منه:", "محفظة نقدية");
+          const ok = await this.store.contributeToSavings(id, amt, accName);
+          if (!ok) return showToast("تعذر الإيداع. تأكد من الحساب.", "error");
+          this.updateSavingsView(); this.updateDashboard();
+          showToast("تم الإيداع في الهدف 💰");
+        }
+
+        if (e.target.classList.contains("edit-goal")) {
+          const g = this.store.getSavingsGoals().find(x => x.id === id);
+          if (!g) return;
+          const newName = prompt("اسم الهدف:", g.name) || g.name;
+          const newTarget = parseAmount(prompt("المبلغ المستهدف:", g.targetAmount));
+          const newCurrent = parseAmount(prompt("المبلغ الحالي:", g.currentAmount));
+          const newDate = prompt("التاريخ المستهدف (YYYY-MM-DD):", g.targetDate) || g.targetDate;
+          await this.store.updateSavingsGoal(id, { name: newName.trim(), targetAmount: newTarget, currentAmount: newCurrent, targetDate: newDate });
+          this.updateSavingsView();
+          showToast("تم تعديل الهدف ✅");
+        }
+      }, { once: true });
+    }
+
+    // الإعدادات (قوائم الفئات والأشخاص داخل النوافذ)
+    updateSettingsView() {
+      this.renderCategoriesList();
+      this.renderPeopleList();
+      this.renderCategoriesSelect();
+    }
+
+    renderCategoriesList() {
+      const list = $("#categories-list");
+      if (!list) return;
+      const cats = this.store.getCategories();
+      list.innerHTML = cats.map(c => `
+        <div class="setting-item">
+          <div class="setting-icon">${c.icon || "🏷️"}</div>
+          <div class="setting-info">
+            <div class="setting-title">${c.name}</div>
+            <div class="setting-description">${c.type === "income" ? "دخل" : "مصروف"}</div>
+          </div>
+        </div>
+      `).join("") || this.emptyHint("أضف فئة جديدة لبدء التنظيم");
+
+      // تحديث قائمة الفئات في نموذج المعاملة
+      this.renderCategoriesSelect();
+    }
+
+    renderPeopleList() {
+      const list = $("#people-list");
+      if (!list) return;
+      const ppl = this.store.getPeople();
+      list.innerHTML = ppl.map(p => `
+        <div class="setting-item">
+          <div class="setting-icon">👤</div>
+          <div class="setting-info">
+            <div class="setting-title">${p.name}</div>
+            <div class="setting-description">${p.phone || "—"}</div>
+          </div>
+        </div>
+      `).join("") || this.emptyHint("أضف أشخاصاً لاستخدامهم في الديون");
+      // تحديث الأشخاص بنموذج الديون
+      const sel = $("#debt-person");
+      if (sel) {
+        sel.innerHTML = `<option value="">اختر الشخص</option>` +
+          ppl.map(p => `<option value="${p.id || p.name}">${p.name}</option>`).join("");
+      }
+    }
+
+    renderAccountsSelect() {
+      const selTx   = $("#transaction-account");
+      const selDebt = $("#debt-account");
+      const accs = this.store.getAccounts();
+      const options = [`<option value="">اختر الحساب</option>`]
+        .concat(accs.map(a => `<option value="${a.name}">${a.name}</option>`))
+        .join("");
+      if (selTx)   selTx.innerHTML = options;
+      if (selDebt) selDebt.innerHTML = options;
+    }
+
+    renderCategoriesSelect() {
+      const sel = $("#transaction-category");
+      if (!sel) return;
+      const cats = this.store.getCategories();
+      sel.innerHTML = `<option value="">اختر الفئة</option>` +
+        cats.map(c => `<option value="${c.name}">${c.name}</option>`).join("");
+    }
+
+    // ---------- Small helpers ----------
+    transactionItemHTML(t, withDate = false) {
+      const isIncome = t.type === "income";
+      const icon = isIncome ? "💼" : this.iconForCategory(t.category);
+      const amountTxt = (isIncome ? "+" : "-") + formatCurrency(Math.abs(parseAmount(t.amount)));
+      const dateChip = withDate ? ` • ${formatDate(t.date)}` : "";
+      return `
+        <div class="transaction-item">
+          <div class="transaction-icon ${isIncome ? "income" : "expense"}">${icon}</div>
+          <div class="transaction-details">
+            <div class="transaction-title">${t.description || (isIncome ? "دخل" : "مصروف")}</div>
+            <div class="transaction-category">${t.category || "أخرى"}${dateChip}</div>
+          </div>
+          <div class="transaction-amount ${isIncome ? "income" : "expense"}">${amountTxt}</div>
+        </div>
+      `;
+    }
+
+    iconForCategory(cat = "") {
+      const map = {
+        "طعام وشراب": "🍔",
+        "النقل": "⛽",
+        "السكن": "🏠",
+        "راتب": "💼",
+      };
+      return map[cat] || "🧾";
+    }
+
+    mapAccountType(t) {
+      return (
+        {
+          cash: "نقدي",
+          bank: "حساب بنكي",
+          credit: "بطاقة ائتمان",
+          savings: "حساب توفير",
+        }[t] || t || "حساب"
       );
     }
-  }
 
-  function navigateTo(sectionId) {
-    State.navSection = sectionId;
-    // active link
-    qa(".nav-link").forEach((el) =>
-      el.classList.toggle("is-active", el.dataset.section === sectionId)
-    );
-    // sections toggle
-    qa(".section").forEach((sec) =>
-      sec.classList.toggle("is-visible", sec.dataset.section === sectionId)
-    );
-    history.replaceState(null, "", `#${sectionId}`);
-
-    // render on demand
-    if (sectionId === "dashboard") renderDashboard();
-    else if (sectionId === "accounts") renderAccounts();
-    else if (sectionId === "info") initInfoForm(); // ensures selects are filled
-    else if (sectionId === "debts") initDebtForm();
-    else if (sectionId === "oblig") renderObligations();
-    else if (sectionId === "bills") initBillsForm();
-    else if (sectionId === "fines") initFinesForm();
-    else if (sectionId === "reports") renderReports();
-    else if (sectionId === "settings") initSettings();
-  }
-
-  // ---------- Renderers: Dashboard ----------
-  async function renderDashboard() {
-    $("todayLabel").textContent = todayStr(State.locale);
-
-    const summary = (await safe("getDashboardSummary")) || {
-      totalBalance: 0,
-      monthIncome: 0,
-      monthExpense: 0,
-      netSaving: 0,
-      savingRate: 0,
-      spendRate: 0,
-    };
-
-    $("totalBalance").textContent = nf(summary.totalBalance, State.locale);
-    $("monthIncome").textContent = nf(summary.monthIncome, State.locale);
-    $("monthExpense").textContent = nf(summary.monthExpense, State.locale);
-    $("netSaving").textContent = nf(summary.netSaving, State.locale);
-
-    // progress bars
-    $("savingRate").value = Math.max(0, Math.min(100, summary.savingRate || 0));
-    $("savingRateLabel").textContent = `${Math.round(summary.savingRate || 0)}%`;
-
-    $("spendRate").value = Math.max(0, Math.min(100, summary.spendRate || 0));
-    $("spendRateLabel").textContent = `${Math.round(summary.spendRate || 0)}%`;
-
-    // latest transactions
-    const list = $("latestTransactions");
-    list.innerHTML = "";
-    const txs = (await safe("getLatestTransactions", 6)) || [];
-    if (!txs.length) {
-      const li = document.createElement("li");
-      li.className = "tx-item";
-      li.innerHTML = `<div class="tx-left"><span class="tx-cat">—</span><span class="tx-desc">لا توجد عمليات بعد</span></div>`;
-      list.appendChild(li);
-    } else {
-      const tpl = $("tpl-transaction-item");
-      txs.forEach((tx) => {
-        const node = tpl.content.firstElementChild.cloneNode(true);
-        node.dataset.id = tx.id || "";
-        q(".tx-cat", node).textContent = tx.category || (tx.type === "income" ? "دخل" : "مصروف");
-        q(".tx-desc", node).textContent = tx.desc || "—";
-        q(".tx-date", node).textContent = df(tx.dateISO, State.locale);
-        q(".tx-amount", node).textContent = (tx.type === "expense" ? "-" : "+") + nf(tx.amount, State.locale);
-        list.appendChild(node);
-      });
+    personName(idOrName) {
+      const p = this.store.getPeople().find((x) => (x.id || x.name) === idOrName);
+      return p?.name || idOrName || "—";
     }
 
-    // alerts
-    await renderAlerts();
-  }
-
-  async function renderAlerts() {
-    const alertsEl = $("alertsList");
-    alertsEl.innerHTML = "";
-    const alerts = (await safe("getAlerts")) || [];
-    if (!alerts.length) return;
-
-    const tpl = $("tpl-alert-item");
-    alerts.forEach((a) => {
-      const node = tpl.content.firstElementChild.cloneNode(true);
-      node.dataset.type = a.type || "info";
-      q(".alert-text", node).textContent = a.text || "—";
-      const btn = q(".alert-dismiss", node);
-      btn.addEventListener("click", async () => {
-        await safe("clearAlerts"); // اختصار لمسح الكل (يمكن جعلها per id لاحقًا)
-        renderAlerts();
-      });
-      alertsEl.appendChild(node);
-    });
-  }
-
-  // ---------- Renderers: Accounts ----------
-  async function renderAccounts() {
-    // cards
-    const grid = $("accountsGrid");
-    grid.innerHTML = "";
-    const tableBody = q("#accountsTable tbody");
-    tableBody.innerHTML = "";
-
-    const rows = (await safe("listAccountsSummary")) || [];
-    const cardTpl = $("tpl-account-card");
-    const rowTpl = $("tpl-accounts-row");
-
-    rows.forEach((acc) => {
-      // card
-      const c = cardTpl.content.firstElementChild.cloneNode(true);
-      c.dataset.id = acc.id || "";
-      q(".account-name", c).textContent = acc.name || "—";
-      q(".account-type", c).textContent = acc.type || "—";
-      q(".acc-balance", c).textContent = nf(acc.balance, State.locale);
-      q(".acc-income", c).textContent = nf(acc.income, State.locale);
-      q(".acc-expense", c).textContent = nf(acc.expense, State.locale);
-      grid.appendChild(c);
-
-      // row
-      const r = rowTpl.content.firstElementChild.cloneNode(true);
-      r.dataset.id = acc.id || "";
-      q(".td-name", r).textContent = acc.name || "—";
-      q(".td-type", r).textContent = acc.type || "—";
-      q(".td-balance", r).textContent = nf(acc.balance, State.locale);
-      q(".td-count", r).textContent = nf0(acc.opsCount || 0, State.locale);
-      q(".td-last", r).textContent = df(acc.lastActivityISO, State.locale);
-      q(".td-status", r).textContent = acc.status || "—";
-      tableBody.appendChild(r);
-    });
-  }
-
-  // ---------- Forms: Info (Transactions) ----------
-  let selectsFilled = { info: false, bills: false, fines: false, debts: false };
-
-  async function fillSelectListsFor(ids = []) {
-    const lists = (await safe("getSelectLists")) || { categories: [], accounts: [] };
-    ids.forEach((id) => {
-      const sel = $(id);
-      if (!sel) return;
-      const isCat = id.toLowerCase().includes("category");
-      const items = isCat ? lists.categories : lists.accounts;
-      sel.innerHTML = items
-        .map((x) => `<option value="${x.id}">${x.name}</option>`)
-        .join("");
-    });
-  }
-
-  function initInfoForm() {
-    if (!selectsFilled.info) {
-      fillSelectListsFor(["category", "account"]);
-      selectsFilled.info = true;
+    emptyHint(text) {
+      return `
+        <div style="padding:20px; text-align:center; color:var(--text-secondary); opacity:.9;">
+          ${text}
+        </div>
+      `;
     }
   }
 
-  function initBillsForm() {
-    if (!selectsFilled.bills) {
-      fillSelectListsFor(["billAccount"]);
-      selectsFilled.bills = true;
-    }
-  }
-
-  function initFinesForm() {
-    if (!selectsFilled.fines) {
-      fillSelectListsFor(["fineAccount"]);
-      selectsFilled.fines = true;
-    }
-  }
-
-  function initDebtForm() {
-    if (!selectsFilled.debts) {
-      fillSelectListsFor(["debtAccount"]);
-      selectsFilled.debts = true;
-    }
-  }
-
-  // submit handlers
-  async function onTxnSubmit(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const payload = {
-      type: form.opType.value, // 'income' | 'expense'
-      amount: parseFloat(form.amount.value) || 0,
-      desc: form.desc.value?.trim() || "",
-      categoryId: form.category.value,
-      accountId: form.account.value,
-      dateISO: form.date.value ? new Date(form.date.value).toISOString() : new Date().toISOString(),
-    };
-    const res = await safe("addTransaction", payload);
-    if (res?.ok) {
-      form.reset();
-      toast("تم حفظ العملية بنجاح ✅", { type: "success" });
-      // refresh dashboard + accounts
-      if (State.navSection === "dashboard") renderDashboard();
-      if (State.navSection === "accounts") renderAccounts();
-    }
-  }
-
-  async function onDebtSubmit(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const payload = {
-      type: form.debtType.value, // 'receivable'|'payable'
-      amount: parseFloat(form.debtAmount.value) || 0,
-      desc: form.debtDesc.value?.trim() || "",
-      accountId: form.debtAccount.value,
-      dueISO: form.debtDue.value ? new Date(form.debtDue.value).toISOString() : null,
-    };
-    const res = await safe("addDebt", payload);
-    if (res?.ok) {
-      form.reset();
-      toast("تم حفظ الدين بنجاح ✅", { type: "success" });
-      if (State.navSection === "reports") renderReports();
-    }
-  }
-
-  async function onObligSubmit(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const payload = {
-      name: form.obligName.value?.trim(),
-      amount: parseFloat(form.obligAmount.value) || 0,
-      cycle: form.obligCycle.value, // 'monthly'|'yearly'
-      category: form.obligCategory.value?.trim() || "",
-      dueISO: form.obligDue.value ? new Date(form.obligDue.value).toISOString() : null,
-      status: form.obligStatus.value || "active",
-    };
-    const res = await safe("addObligation", payload);
-    if (res?.ok) {
-      form.reset();
-      toast("تم حفظ الالتزام ✅", { type: "success" });
-      renderObligations();
-      if (State.navSection === "reports") renderReports();
-    }
-  }
-
-  async function onBillSubmit(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const payload = {
-      name: form.billName.value?.trim(),
-      amount: parseFloat(form.billAmount.value) || 0,
-      accountId: form.billAccount.value,
-      dateISO: form.billDate.value ? new Date(form.billDate.value).toISOString() : new Date().toISOString(),
-      ref: form.billRef.value?.trim() || "",
-    };
-    const res = await safe("addBill", payload);
-    if (res?.ok) {
-      form.reset();
-      toast("تم تسجيل سداد الفاتورة ✅", { type: "success" });
-      renderDashboard();
-      renderAccounts();
-    }
-  }
-
-  async function onFineSubmit(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const payload = {
-      authority: form.fineAuth.value?.trim(),
-      amount: parseFloat(form.fineAmount.value) || 0,
-      accountId: form.fineAccount.value,
-      dateISO: form.fineDate.value ? new Date(form.fineDate.value).toISOString() : new Date().toISOString(),
-      note: form.fineNote.value?.trim() || "",
-    };
-    const res = await safe("addFine", payload);
-    if (res?.ok) {
-      form.reset();
-      toast("تم تسجيل سداد المخالفة ✅", { type: "success" });
-      renderDashboard();
-      renderAccounts();
-    }
-  }
-
-  // ---------- Obligations table ----------
-  async function renderObligations() {
-    const tbody = q("#obligTable tbody");
-    tbody.innerHTML = "";
-    const list = (await safe("listObligations")) || [];
-    const tpl = $("tpl-oblig-row");
-    list.forEach((o) => {
-      const tr = tpl.content.firstElementChild.cloneNode(true);
-      tr.dataset.id = o.id || "";
-      q(".td-name", tr).textContent = o.name || "—";
-      q(".td-cat", tr).textContent = o.category || "—";
-      q(".td-cycle", tr).textContent = o.cycle === "yearly" ? "سنوي" : "شهري";
-      q(".td-amount", tr).textContent = nf(o.amount, State.locale);
-      q(".td-due", tr).textContent = df(o.dueISO, State.locale);
-      q(".td-status", tr).textContent = o.status || "active";
-      const btnEdit = q('[data-action="edit"]', tr);
-      const btnDel = q('[data-action="delete"]', tr);
-      btnEdit.addEventListener("click", () => {
-        toast("ميزة التعديل ستُفعَّل لاحقًا ✏️");
-      });
-      btnDel.addEventListener("click", () => {
-        toast("ميزة الحذف ستُفعَّل لاحقًا 🗑️");
-      });
-      tbody.appendChild(tr);
-    });
-  }
-
-  // ---------- Reports ----------
-  async function renderReports() {
-    const rep = (await safe("getReports")) || {
-      totalIncome: 0,
-      totalExpense: 0,
-      totalSaving: 0,
-      savingRate: 0,
-      byCategory: [],
-      receivables: 0,
-      payables: 0,
-      kpis: { saving: 0, fixedOblig: 0, dailySpend: 0, emergency: 0 },
-    };
-
-    $("repTotalIncome").textContent = nf(rep.totalIncome, State.locale);
-    $("repTotalExpense").textContent = nf(rep.totalExpense, State.locale);
-    $("repTotalSaving").textContent = nf(rep.totalSaving, State.locale);
-    $("repSavingRate").textContent = `${Math.round(rep.savingRate || 0)}%`;
-
-    // byCategory table
-    const tbody = q("#byCategory tbody");
-    tbody.innerHTML = "";
-    const tpl = $("tpl-bycat-row");
-    (rep.byCategory || []).forEach((row) => {
-      const tr = tpl.content.firstElementChild.cloneNode(true);
-      q(".td-cat", tr).textContent = row.category || "—";
-      q(".td-amount", tr).textContent = nf(row.amount, State.locale);
-      q(".td-rate", tr).textContent = `${Math.round(row.rate || 0)}%`;
-      tbody.appendChild(tr);
-    });
-
-    // small debt summary
-    $("repReceivables").textContent = nf(rep.receivables || 0, State.locale);
-    $("repPayables").textContent = nf(rep.payables || 0, State.locale);
-
-    // KPIs progress
-    $("kpiSaving").value = clamp0to100(rep.kpis?.saving);
-    $("kpiSavingLabel").textContent = `${Math.round(rep.kpis?.saving || 0)}%`;
-
-    $("kpiFixedOblig").value = clamp0to100(rep.kpis?.fixedOblig);
-    $("kpiFixedObligLabel").textContent = `${Math.round(rep.kpis?.fixedOblig || 0)}%`;
-
-    $("kpiDailySpend").value = clamp0to100(rep.kpis?.dailySpend);
-    $("kpiDailySpendLabel").textContent = nf(rep.kpis?.dailySpend || 0, State.locale);
-
-    $("kpiEmergency").value = clamp0to100(rep.kpis?.emergency);
-    $("kpiEmergencyLabel").textContent = `${Math.round(rep.kpis?.emergency || 0)}%`;
-  }
-
-  function clamp0to100(v) {
-    v = Number(v) || 0;
-    return Math.max(0, Math.min(100, v));
-  }
-
-  // ---------- Settings ----------
-  async function initSettings() {
-    const s = (await safe("getSettings")) || {};
-    if (s.currency) State.currency = s.currency;
-    if (s.locale) State.locale = s.locale;
-    if (s.theme) State.theme = s.theme;
-
-    // تعبئة الحقول (إن وجدت)
-    if ($("currency")) $("currency").value = s.currency || State.currency;
-    if ($("locale")) $("locale").value = s.locale || State.locale;
-    if ($("theme")) $("theme").value = s.theme || State.theme;
-    if ($("dateStart")) $("dateStart").value = s.dateStart || 1;
-  }
-
-  // ---------- Wireup ----------
-  function wireForms() {
-    const txnForm = $("txnForm");
-    if (txnForm) txnForm.addEventListener("submit", onTxnSubmit);
-
-    const debtForm = $("debtForm");
-    if (debtForm) debtForm.addEventListener("submit", onDebtSubmit);
-
-    const obligForm = $("obligForm");
-    if (obligForm) obligForm.addEventListener("submit", onObligSubmit);
-
-    const billForm = $("billForm");
-    if (billForm) billForm.addEventListener("submit", onBillSubmit);
-
-    const fineForm = $("fineForm");
-    if (fineForm) fineForm.addEventListener("submit", onFineSubmit);
-
-    // clear alerts
-    const btnClearAlerts = $("btnClearAlerts");
-    if (btnClearAlerts)
-      btnClearAlerts.addEventListener("click", async () => {
-        await safe("clearAlerts");
-        renderAlerts();
-      });
-
-    // dialogs
-    const btnQuickAdd = $("btnQuickAdd");
-    if (btnQuickAdd) btnQuickAdd.addEventListener("click", () => openDialog("dlgQuickAdd"));
-    qa("[data-open]").forEach((btn) => {
-      btn.addEventListener("click", () => openDialog(btn.dataset.open));
-    });
-
-    // export/import (سيتم تمكينها مع التخزين)
-    const btnExport = $("btnExport");
-    if (btnExport) btnExport.addEventListener("click", () => toast("ميزة التصدير ستُفعل مع التخزين 💾"));
-
-    const btnImport = $("btnImport");
-    if (btnImport) btnImport.addEventListener("click", () => toast("ميزة الاستيراد ستُفعل مع التخزين 📥"));
-  }
-
-  async function boot() {
-    // حاول قراءة الإعدادات أولاً
-    if (hasStore() && typeof window.store.init === "function") {
-      await safe("init");
-    }
-    const s = (await safe("getSettings")) || {};
-    State.locale = s.locale || State.locale;
-    State.currency = s.currency || State.currency;
-    State.theme = s.theme || State.theme;
-
-    $("todayLabel") && ( $("todayLabel").textContent = todayStr(State.locale) );
-
-    initNav();
-    wireForms();
-
-    // render initial section
-    if (State.navSection === "dashboard") renderDashboard();
-  }
-
-  document.addEventListener("DOMContentLoaded", boot);
+  // ---------- Bootstrap ----------
+  window.__financeApp = new FinanceApp();
 })();

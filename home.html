@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>نظام إدارة المصاريف</title>
+  <!-- ملف التنسيق لديك -->
+  <link rel="stylesheet" href=".//assets/css/theme.css" />
+</head>
+<body>
+
+  <div class="container">
+    <!-- ===== الهيدر / لوحة الرصيد ===== -->
+    <header class="header">
+      <div class="welcome-section">
+        <div class="welcome-text">مرحبًا بك</div>
+        <h1 class="user-name">لوحة التحكم</h1>
+      </div>
+
+      <div class="balance-card">
+        <div class="balance-label">الرصيد الإجمالي</div>
+        <div id="total-balance" class="balance-amount">—</div>
+        <div class="balance-change">الدخل هذا الشهر: <span id="total-income" style="margin-inline-start:6px">—</span></div>
+        <div class="balance-change" style="margin-top:8px">المصروف هذا الشهر: <span id="total-expenses" style="margin-inline-start:6px">—</span></div>
+      </div>
+    </header>
+
+    <!-- ===== المحتوى ===== -->
+    <main class="content">
+      <!-- ===== تبويب: لوحة التحكم ===== -->
+      <section id="dashboard" class="tab-content active">
+        <div class="quick-actions">
+          <button id="add-income-btn" class="quick-action">
+            <div class="icon">+</div> إضافة دخل
+          </button>
+          <button id="add-expense-btn" class="quick-action expense">
+            <div class="icon">−</div> إضافة مصروف
+          </button>
+        </div>
+
+        <div class="section-header">
+          <h3 class="section-title">أحدث العمليات</h3>
+          <button id="see-all-transactions" class="see-all">عرض الكل</button>
+        </div>
+        <div id="recent-transactions" class="transaction-list"></div>
+      </section>
+
+      <!-- ===== تبويب: المعاملات ===== -->
+      <section id="transactions" class="tab-content">
+        <div class="section-header">
+          <h3 class="section-title">كل المعاملات</h3>
+          <button id="add-transaction-btn" class="see-all">+ عملية</button>
+        </div>
+
+        <div class="period-selector">
+          <button class="period-btn active" data-period="week">أسبوع</button>
+          <button class="period-btn" data-period="month">شهر</button>
+          <button class="period-btn" data-period="year">سنة</button>
+          <button class="period-btn" data-period="all">الكل</button>
+          <!-- إذا أردت زر "اليوم" مدعوم أيضًا في الكود -->
+          <!-- <button class="period-btn" data-period="day">اليوم</button> -->
+        </div>
+
+        <div id="all-transactions" class="transaction-list"></div>
+      </section>
+
+      <!-- ===== تبويب: الحسابات ===== -->
+      <section id="accounts" class="tab-content">
+        <div class="section-header">
+          <h3 class="section-title">الحسابات</h3>
+          <button id="add-account-btn" class="see-all">+ حساب</button>
+        </div>
+        <div id="accounts-list" class="cards"></div>
+      </section>
+
+      <!-- ===== تبويب: الديون ===== -->
+      <section id="debts" class="tab-content">
+        <div class="section-header">
+          <h3 class="section-title">الديون</h3>
+          <button id="add-debt-btn" class="see-all">+ دين</button>
+        </div>
+
+        <div class="debt-section">
+          <div class="debt-section-title">ديون لي (على الآخرين)</div>
+          <div id="debts-to-me"></div>
+        </div>
+
+        <div class="debt-section">
+          <div class="debt-section-title">ديون عليّ (للآخرين)</div>
+          <div id="debts-from-me"></div>
+        </div>
+      </section>
+
+      <!-- ===== تبويب: الادخار ===== -->
+      <section id="savings" class="tab-content">
+        <div class="section-header">
+          <h3 class="section-title">أهداف الادخار</h3>
+          <button id="add-savings-goal-btn" class="see-all">+ هدف</button>
+        </div>
+        <div id="savings-goals" class="cards"></div>
+      </section>
+
+      <!-- ===== تبويب: الإعدادات ===== -->
+      <section id="settings" class="tab-content">
+        <div class="section-header">
+          <h3 class="section-title">الإعدادات</h3>
+          <div></div>
+        </div>
+
+        <div class="settings-list" style="margin-bottom:16px">
+          <button id="manage-categories-btn" class="action-btn">إدارة الفئات</button>
+          <div id="categories-list"></div>
+        </div>
+
+        <div class="settings-list" style="margin-bottom:16px">
+          <button id="manage-people-btn" class="action-btn">إدارة الأشخاص</button>
+          <div id="people-list"></div>
+        </div>
+
+        <div class="settings-list">
+          <button id="export-data-btn" class="action-btn">تصدير البيانات</button>
+          <button id="clear-all-data-btn" class="action-btn">مسح جميع البيانات</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===== شريط التبويبات السفلي ===== -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="dashboard"><span class="icon">🏠</span>الرئيسية</button>
+      <button class="nav-tab" data-tab="transactions"><span class="icon">📄</span>المعاملات</button>
+      <button class="nav-tab" data-tab="accounts"><span class="icon">💳</span>الحسابات</button>
+      <button class="nav-tab" data-tab="debts"><span class="icon">🤝</span>الديون</button>
+      <button class="nav-tab" data-tab="savings"><span class="icon">🎯</span>الادخار</button>
+      <button class="nav-tab" data-tab="settings"><span class="icon">⚙️</span>الإعدادات</button>
+    </nav>
+  </div>
+
+  <!-- ===== مودال: معاملة ===== -->
+  <div id="transaction-modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">إضافة معاملة</h3>
+        <button class="close" aria-label="إغلاق">×</button>
+      </div>
+      <form id="transaction-form">
+        <div class="form-group">
+          <label>النوع</label>
+          <select id="transaction-type" required>
+            <option value="income">دخل</option>
+            <option value="expense">مصروف</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>المبلغ</label>
+          <input id="transaction-amount" type="number" step="0.01" placeholder="0" required />
+        </div>
+
+        <div class="form-group">
+          <label>الوصف</label>
+          <input id="transaction-description" placeholder="وصف مختصر (اختياري)" />
+        </div>
+
+        <div class="form-group">
+          <label>الفئة</label>
+          <select id="transaction-category" required>
+            <option value="">اختر الفئة</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>الحساب</label>
+          <select id="transaction-account" required>
+            <option value="">اختر الحساب</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>التاريخ</label>
+          <input id="transaction-date" type="date" required />
+        </div>
+
+        <div class="form-group">
+          <label>ملاحظات</label>
+          <textarea id="transaction-notes" rows="3" placeholder="ملاحظات (اختياري)"></textarea>
+        </div>
+
+        <button type="submit" class="action-btn">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== مودال: حساب ===== -->
+  <div id="account-modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">إضافة حساب</h3>
+        <button class="close" aria-label="إغلاق">×</button>
+      </div>
+      <form id="account-form">
+        <div class="form-group">
+          <label>اسم الحساب</label>
+          <input id="account-name" placeholder="مثال: محفظة نقدية" required />
+        </div>
+
+        <div class="form-group">
+          <label>نوع الحساب</label>
+          <select id="account-type" required>
+            <option value="cash">نقدي</option>
+            <option value="bank">حساب بنكي</option>
+            <option value="credit">بطاقة ائتمان</option>
+            <option value="savings">حساب توفير</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>الرصيد الابتدائي</label>
+          <input id="account-initial-balance" type="number" step="0.01" value="0" />
+        </div>
+
+        <button type="submit" class="action-btn">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== مودال: دين ===== -->
+  <div id="debt-modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">إضافة دين</h3>
+        <button class="close" aria-label="إغلاق">×</button>
+      </div>
+      <form id="debt-form">
+        <div class="form-group">
+          <label>النوع</label>
+          <select id="debt-type" required>
+            <option value="to-me">لي (أقرضت شخصًا)</option>
+            <option value="from-me">عليّ (اقترضت من شخص)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>الشخص</label>
+          <select id="debt-person" required>
+            <option value="">اختر الشخص</option>
+          </select>
+        </div>
+
+        <!-- سيُحقن اختيار الحساب تلقائيًا إن لم يوجد، لكن نضعه هنا جاهزًا -->
+        <div class="form-group">
+          <label>الحساب</label>
+          <select id="debt-account" required>
+            <option value="">اختر الحساب</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>المبلغ</label>
+          <input id="debt-amount" type="number" step="0.01" placeholder="0" required />
+        </div>
+
+        <div class="form-group">
+          <label>الوصف</label>
+          <input id="debt-description" placeholder="سبب الدين (اختياري)" />
+        </div>
+
+        <div class="form-group">
+          <label>التاريخ</label>
+          <input id="debt-date" type="date" required />
+        </div>
+
+        <button type="submit" class="action-btn">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== مودال: هدف ادخار ===== -->
+  <div id="savings-modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">هدف ادخار جديد</h3>
+        <button class="close" aria-label="إغلاق">×</button>
+      </div>
+      <form id="savings-form">
+        <div class="form-group">
+          <label>اسم الهدف</label>
+          <input id="savings-goal-name" placeholder="مثال: مصاريف سفر" required />
+        </div>
+
+        <div class="form-group">
+          <label>المبلغ المستهدف</label>
+          <input id="savings-target-amount" type="number" step="0.01" placeholder="0" required />
+        </div>
+
+        <div class="form-group">
+          <label>المبلغ الحالي</label>
+          <input id="savings-current-amount" type="number" step="0.01" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label>التاريخ المستهدف</label>
+          <input id="savings-target-date" type="date" />
+        </div>
+
+        <button type="submit" class="action-btn">حفظ</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== مودال: الفئات ===== -->
+  <div id="categories-modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">إدارة الفئات</h3>
+        <button class="close" aria-label="إغلاق">×</button>
+      </div>
+      <div class="form-group">
+        <label>اسم الفئة</label>
+        <input id="new-category-name" placeholder="مثال: طعام وشراب" />
+      </div>
+      <div class="form-group">
+        <label>نوع الفئة</label>
+        <select id="new-category-type">
+          <option value="expense">مصروف</option>
+          <option value="income">دخل</option>
+        </select>
+      </div>
+      <button id="add-category-btn" class="action-btn">إضافة</button>
+
+      <div class="section-header" style="margin-top:16px">
+        <h3 class="section-title">القائمة الحالية</h3>
+      </div>
+      <div id="categories-list" class="settings-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== مودال: الأشخاص ===== -->
+  <div id="people-modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">إدارة الأشخاص</h3>
+        <button class="close" aria-label="إغلاق">×</button>
+      </div>
+      <div class="form-group">
+        <label>اسم الشخص</label>
+        <input id="new-person-name" placeholder="مثال: أحمد" />
+      </div>
+      <div class="form-group">
+        <label>رقم الهاتف (اختياري)</label>
+        <input id="new-person-phone" placeholder="05xxxxxxxx" />
+      </div>
+      <button id="add-person-btn" class="action-btn">إضافة</button>
+
+      <div class="section-header" style="margin-top:16px">
+        <h3 class="section-title">القائمة الحالية</h3>
+      </div>
+      <div id="people-list" class="settings-list"></div>
+    </div>
+  </div>
+
+  <!-- ربط السكربتات (رتّب: storage ثم app) -->
+  <script src=".//assets/js/storage.js" defer></script>
+  <script src=".//assets/js/app.js" defer></script>
+</body>
+</html>
