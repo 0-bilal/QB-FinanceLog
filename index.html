@@ -7,8 +7,9 @@
   <link rel="stylesheet" href="./assets/css/theme.css" />
 </head>
 <body>
-    <!-- Header Section -->
+    <!-- الحاوي الرئيسي -->
     <div class="container">
+        <!-- الهيدر -->
         <div class="header">
             <div class="welcome-section">
                 <div class="welcome-text">مرحباً بعودتك</div>
@@ -25,9 +26,9 @@
             </div>
         </div>
 
-        <!-- Content Area -->
+        <!-- المحتوى -->
         <div class="content">
-            <!-- Dashboard Tab -->
+            <!-- لوحة التحكم -->
             <div class="tab-content active" id="dashboard">
                 <div class="stats-grid">
                     <div class="stat-card income">
@@ -86,7 +87,7 @@
                 </div>
             </div>
 
-            <!-- Transactions Tab -->
+            <!-- صفحة المعاملات -->
             <div class="tab-content" id="transactions">
                 <button class="action-btn" id="add-transaction-btn">+ إضافة معاملة جديدة</button>
                 
@@ -105,11 +106,11 @@
                 </div>
 
                 <div class="transaction-list" id="all-transactions">
-                    <!-- All transactions will be loaded here -->
+                    <!-- جميع المعاملات ستظهر هنا -->
                 </div>
             </div>
 
-            <!-- Accounts Tab -->
+            <!-- صفحة الحسابات -->
             <div class="tab-content" id="accounts">
                 <button class="action-btn" id="add-account-btn">+ إضافة حساب جديد</button>
                 
@@ -128,7 +129,7 @@
                 </div>
             </div>
 
-            <!-- Debts Tab -->
+            <!-- صفحة الديون -->
             <div class="tab-content" id="debts">
                 <button class="action-btn" id="add-debt-btn">+ إضافة دين جديد</button>
                 
@@ -136,6 +137,10 @@
                     <h3 class="debt-section-title">ديون لي</h3>
                     <div id="debts-to-me">
                         <div class="debt-card debt-to-me">
+                            <div class="debt-info">
+                                <h4>محمد أحمد</h4>
+                                <p>مستحق منذ 5 أيام</p>
+                            </div>
                             <div class="debt-amount positive">+$500.00</div>
                         </div>
                         
@@ -163,36 +168,36 @@
                 </div>
             </div>
 
-            <!-- Savings Tab -->
+            <!-- صفحة الادخار -->
             <div class="tab-content" id="savings">
                 <button class="action-btn" id="add-savings-goal-btn">🎯 إضافة هدف ادخار</button>
                 
                 <div id="savings-goals">
-                    <div class="account-card" style="background: linear-gradient(135deg, var(--accent-purple) 0%, rgba(139, 92, 246, 0.8) 100%);">
+                    <div class="account-card">
                         <div class="account-type">هدف الادخار</div>
                         <div class="account-name">سيارة جديدة</div>
                         <div class="account-balance">$15,000 / $25,000</div>
-                        <div style="margin-top: 12px;">
-                            <div style="background: rgba(255,255,255,0.3); height: 6px; border-radius: 3px;">
-                                <div style="background: white; height: 100%; width: 60%; border-radius: 3px;"></div>
+                        <div style="margin-top: 16px;">
+                            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: var(--gradient-cosmic); height: 100%; width: 60%; border-radius: 4px; box-shadow: var(--glow-blue);"></div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="account-card" style="background: linear-gradient(135deg, var(--accent-pink) 0%, rgba(236, 72, 153, 0.8) 100%);">
+                    <div class="account-card">
                         <div class="account-type">هدف الادخار</div>
                         <div class="account-name">إجازة صيفية</div>
                         <div class="account-balance">$3,200 / $5,000</div>
-                        <div style="margin-top: 12px;">
-                            <div style="background: rgba(255,255,255,0.3); height: 6px; border-radius: 3px;">
-                                <div style="background: white; height: 100%; width: 64%; border-radius: 3px;"></div>
+                        <div style="margin-top: 16px;">
+                            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: var(--gradient-cosmic); height: 100%; width: 64%; border-radius: 4px; box-shadow: var(--glow-blue);"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Settings Tab -->
+            <!-- صفحة الإعدادات -->
             <div class="tab-content" id="settings">
                 <div class="settings-list">
                     <div class="setting-item" id="manage-categories-btn">
@@ -228,7 +233,7 @@
                     </div>
 
                     <div class="setting-item" id="clear-all-data-btn">
-                        <div class="setting-icon" style="background: rgba(255, 107, 53, 0.2); color: var(--accent-orange);">🗑️</div>
+                        <div class="setting-icon" style="background: rgba(237, 137, 54, 0.15); color: var(--neon-orange); border-color: rgba(237, 137, 54, 0.3);">🗑️</div>
                         <div class="setting-info">
                             <div class="setting-title">مسح جميع البيانات</div>
                             <div class="setting-description">حذف جميع المعاملات والحسابات</div>
@@ -238,7 +243,7 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
+        <!-- شريط التنقل -->
         <div class="nav-tabs">
             <button class="nav-tab active" data-tab="dashboard">
                 <div class="icon">🏠</div>
@@ -267,10 +272,10 @@
         </div>
     </div>
 
-    <!-- Floating Action Button -->
-    <button class="fab" id="fab-add">+</button>
+    <!-- الزر العائم -->
+  
 
-    <!-- Transaction Modal -->
+    <!-- نافذة المعاملات -->
     <div class="modal" id="transaction-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -333,7 +338,7 @@
         </div>
     </div>
 
-    <!-- Account Modal -->
+    <!-- نافذة الحسابات -->
     <div class="modal" id="account-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -362,22 +367,12 @@
                     <input type="number" id="account-initial-balance" step="0.01" value="0" required placeholder="0.00">
                 </div>
 
-                <div class="form-group">
-                    <label>رقم الحساب (اختياري):</label>
-                    <input type="text" id="account-number" placeholder="رقم الحساب">
-                </div>
-
-                <div class="form-group">
-                    <label>البنك (اختياري):</label>
-                    <input type="text" id="account-bank" placeholder="اسم البنك">
-                </div>
-
                 <button type="submit" class="action-btn">💾 حفظ الحساب</button>
             </form>
         </div>
     </div>
 
-    <!-- Debt Modal -->
+    <!-- نافذة الديون -->
     <div class="modal" id="debt-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -419,22 +414,12 @@
                     <input type="date" id="debt-date" required>
                 </div>
 
-                <div class="form-group">
-                    <label>تاريخ الاستحقاق (اختياري):</label>
-                    <input type="date" id="debt-due-date">
-                </div>
-
-                <div class="form-group">
-                    <label>ملاحظات:</label>
-                    <textarea id="debt-notes" rows="3" placeholder="ملاحظات إضافية (اختياري)"></textarea>
-                </div>
-
                 <button type="submit" class="action-btn">💾 حفظ الدين</button>
             </form>
         </div>
     </div>
 
-    <!-- Savings Goal Modal -->
+    <!-- نافذة أهداف الادخار -->
     <div class="modal" id="savings-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -462,17 +447,12 @@
                     <input type="date" id="savings-target-date">
                 </div>
 
-                <div class="form-group">
-                    <label>الوصف:</label>
-                    <textarea id="savings-description" rows="3" placeholder="وصف الهدف (اختياري)"></textarea>
-                </div>
-
                 <button type="submit" class="action-btn">💾 حفظ الهدف</button>
             </form>
         </div>
     </div>
 
-    <!-- Categories Modal -->
+    <!-- نافذة إدارة الفئات -->
     <div class="modal" id="categories-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -482,13 +462,13 @@
             
             <div class="form-group">
                 <label>إضافة فئة جديدة:</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
                     <input type="text" id="new-category-name" placeholder="اسم الفئة" style="flex: 1;">
                     <select id="new-category-type" style="width: 100px;">
                         <option value="expense">مصروف</option>
                         <option value="income">دخل</option>
                     </select>
-                    <button type="button" class="action-btn" style="width: 80px; padding: 8px; margin: 0;" id="add-category-btn">إضافة</button>
+                    <button type="button" class="action-btn" style="width: 80px; padding: 12px; margin: 0;" id="add-category-btn">إضافة</button>
                 </div>
             </div>
 
@@ -500,25 +480,11 @@
                         <div class="setting-description">مصروف</div>
                     </div>
                 </div>
-                <div class="setting-item">
-                    <div class="setting-icon">🚗</div>
-                    <div class="setting-info">
-                        <div class="setting-title">النقل</div>
-                        <div class="setting-description">مصروف</div>
-                    </div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-icon">💼</div>
-                    <div class="setting-info">
-                        <div class="setting-title">راتب</div>
-                        <div class="setting-description">دخل</div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- People Modal -->
+    <!-- نافذة إدارة الأشخاص -->
     <div class="modal" id="people-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -528,10 +494,10 @@
             
             <div class="form-group">
                 <label>إضافة شخص جديد:</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
                     <input type="text" id="new-person-name" placeholder="اسم الشخص" style="flex: 1;">
                     <input type="tel" id="new-person-phone" placeholder="رقم الهاتف" style="flex: 1;">
-                    <button type="button" class="action-btn" style="width: 80px; padding: 8px; margin: 0;" id="add-person-btn">إضافة</button>
+                    <button type="button" class="action-btn" style="width: 80px; padding: 12px; margin: 0;" id="add-person-btn">إضافة</button>
                 </div>
             </div>
 
@@ -543,20 +509,6 @@
                         <div class="setting-description">+966501234567</div>
                     </div>
                 </div>
-                <div class="setting-item">
-                    <div class="setting-icon">👤</div>
-                    <div class="setting-info">
-                        <div class="setting-title">سارة خالد</div>
-                        <div class="setting-description">+966501234568</div>
-                    </div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-icon">👤</div>
-                    <div class="setting-info">
-                        <div class="setting-title">علي حسن</div>
-                        <div class="setting-description">+966501234569</div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -564,10 +516,8 @@
     <script>
         // ============ نظام التنقل بين الواجهات ============
         
-        // متغيرات عامة
         let currentTab = 'dashboard';
         
-        // تهيئة التطبيق عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
             setupNavigation();
@@ -575,9 +525,7 @@
             setupEventListeners();
         });
 
-        // تهيئة التطبيق
         function initializeApp() {
-            // تعيين التاريخ الحالي في حقول التاريخ
             const today = new Date().toISOString().split('T')[0];
             const dateInputs = document.querySelectorAll('input[type="date"]');
             dateInputs.forEach(input => {
@@ -585,13 +533,9 @@
                     input.value = today;
                 }
             });
-
-            // تحديث محتوى الصفحة الرئيسية
             updateDashboard();
         }
 
-        // ============ نظام التنقل ============
-        
         function setupNavigation() {
             const navTabs = document.querySelectorAll('.nav-tab');
             
@@ -601,25 +545,21 @@
                     switchTab(targetTab);
                 });
             });
-
-            // تنشيط التبويب الأول
+            
             switchTab('dashboard');
         }
 
         function switchTab(tabName) {
-            // إخفاء جميع المحتويات
             const allTabContents = document.querySelectorAll('.tab-content');
             allTabContents.forEach(content => {
                 content.classList.remove('active');
             });
 
-            // إلغاء تنشيط جميع الأزرار
             const allNavTabs = document.querySelectorAll('.nav-tab');
             allNavTabs.forEach(navTab => {
                 navTab.classList.remove('active');
             });
 
-            // تنشيط التبويب المحدد
             const targetContent = document.getElementById(tabName);
             const targetNavTab = document.querySelector(`[data-tab="${tabName}"]`);
             
@@ -628,7 +568,6 @@
                 targetNavTab.classList.add('active');
                 currentTab = tabName;
 
-                // تحديث محتوى الصفحة حسب التبويب
                 switch(tabName) {
                     case 'dashboard':
                         updateDashboard();
@@ -652,20 +591,14 @@
             }
         }
 
-        // ============ تحديث محتوى الصفحات ============
-        
         function updateDashboard() {
-            // تحديث الإحصائيات الرئيسية
             document.getElementById('total-balance').textContent = '$86,996.36';
             document.getElementById('total-income').textContent = '$12,450';
             document.getElementById('total-expenses').textContent = '$8,320';
-            
-            // تحديث المعاملات الحديثة
             updateRecentTransactions();
         }
 
         function updateTransactionsPage() {
-            // تحديث قائمة جميع المعاملات
             const allTransactionsList = document.getElementById('all-transactions');
             
             const transactions = [
@@ -700,22 +633,6 @@
                     amount: '+$4,850.00',
                     type: 'income',
                     date: '3 أيام'
-                },
-                {
-                    icon: '🛒',
-                    title: 'تسوق البقالة',
-                    category: 'طعام وشراب',
-                    amount: '-$128.45',
-                    type: 'expense',
-                    date: '4 أيام'
-                },
-                {
-                    icon: '💊',
-                    title: 'الصيدلية',
-                    category: 'الصحة',
-                    amount: '-$67.30',
-                    type: 'expense',
-                    date: '5 أيام'
                 }
             ];
 
@@ -730,43 +647,37 @@
                 </div>
             `).join('');
 
-            // تحديث مرشحات الفترة
             setupPeriodFilters();
         }
 
         function updateAccountsPage() {
-            // تحديث قائمة الحسابات
             const accountsList = document.getElementById('accounts-list');
             
             const accounts = [
                 {
                     type: 'حساب بنكي',
                     name: 'البنك الأهلي',
-                    balance: '$45,250.00',
-                    gradient: 'var(--gradient-primary)'
+                    balance: '$45,250.00'
                 },
                 {
                     type: 'نقدي',
                     name: 'المحفظة',
-                    balance: '$1,240.36',
-                    gradient: 'var(--gradient-accent)'
+                    balance: '$1,240.36'
                 },
                 {
                     type: 'بطاقة ائتمان',
                     name: 'فيزا البنك الأهلي',
-                    balance: '$3,500.00',
-                    gradient: 'linear-gradient(135deg, var(--accent-purple) 0%, rgba(139, 92, 246, 0.8) 100%)'
+                    balance: '$3,500.00'
                 },
                 {
                     type: 'حساب توفير',
                     name: 'حساب التوفير',
-                    balance: '$37,006.00',
-                    gradient: 'linear-gradient(135deg, var(--accent-pink) 0%, rgba(236, 72, 153, 0.8) 100%)'
+                    balance: '$37,006.00'
                 }
             ];
 
             accountsList.innerHTML = accounts.map(account => `
-                <div class="account-card" style="background: ${account.gradient};">
+                <div class="account-card">
                     <div class="account-type">${account.type}</div>
                     <div class="account-name">${account.name}</div>
                     <div class="account-balance">${account.balance}</div>
@@ -792,13 +703,6 @@
                     </div>
                     <div class="debt-amount positive">+$250.00</div>
                 </div>
-                <div class="debt-card debt-to-me">
-                    <div class="debt-info">
-                        <h4>عبدالله سالم</h4>
-                        <p>مستحق منذ 3 أيام • دفعة السيارة</p>
-                    </div>
-                    <div class="debt-amount positive">+$1,200.00</div>
-                </div>
             `;
 
             // تحديث الديون عليّ
@@ -811,59 +715,37 @@
                     </div>
                     <div class="debt-amount negative">-$800.00</div>
                 </div>
-                <div class="debt-card debt-from-me">
-                    <div class="debt-info">
-                        <h4>فاطمة عبدالرحمن</h4>
-                        <p>مستحق خلال أسبوع • مشاركة الإيجار</p>
-                    </div>
-                    <div class="debt-amount negative">-$620.00</div>
-                </div>
             `;
         }
 
         function updateSavingsPage() {
-            // تحديث أهداف الادخار
             const savingsGoals = document.getElementById('savings-goals');
             
             const goals = [
                 {
                     name: 'سيارة جديدة',
                     current: 15000,
-                    target: 25000,
-                    gradient: 'linear-gradient(135deg, var(--accent-purple) 0%, rgba(139, 92, 246, 0.8) 100%)'
+                    target: 25000
                 },
                 {
                     name: 'إجازة صيفية',
                     current: 3200,
-                    target: 5000,
-                    gradient: 'linear-gradient(135deg, var(--accent-pink) 0%, rgba(236, 72, 153, 0.8) 100%)'
-                },
-                {
-                    name: 'صندوق الطوارئ',
-                    current: 8500,
-                    target: 10000,
-                    gradient: 'var(--gradient-primary)'
-                },
-                {
-                    name: 'تجديد المنزل',
-                    current: 2800,
-                    target: 15000,
-                    gradient: 'var(--gradient-accent)'
+                    target: 5000
                 }
             ];
 
             savingsGoals.innerHTML = goals.map(goal => {
                 const percentage = Math.round((goal.current / goal.target) * 100);
                 return `
-                    <div class="account-card" style="background: ${goal.gradient};">
+                    <div class="account-card">
                         <div class="account-type">هدف الادخار</div>
                         <div class="account-name">${goal.name}</div>
                         <div class="account-balance">${goal.current.toLocaleString()} / ${goal.target.toLocaleString()}</div>
-                        <div style="margin-top: 12px;">
-                            <div style="background: rgba(255,255,255,0.3); height: 6px; border-radius: 3px; overflow: hidden;">
-                                <div style="background: white; height: 100%; width: ${percentage}%; border-radius: 3px; transition: width 0.3s ease;"></div>
+                        <div style="margin-top: 16px;">
+                            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: var(--gradient-cosmic); height: 100%; width: ${percentage}%; border-radius: 4px; box-shadow: var(--glow-blue); transition: width 0.5s ease;"></div>
                             </div>
-                            <div style="margin-top: 6px; font-size: 12px; opacity: 0.9;">${percentage}% مكتمل</div>
+                            <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">${percentage}% مكتمل</div>
                         </div>
                     </div>
                 `;
@@ -871,12 +753,10 @@
         }
 
         function updateSettingsPage() {
-            // إعدادات الصفحة جاهزة في HTML
             console.log('Settings page loaded');
         }
 
         function updateRecentTransactions() {
-            // تحديث المعاملات الحديثة في الصفحة الرئيسية
             const recentTransactionsList = document.getElementById('recent-transactions');
             
             const recentTransactions = [
@@ -900,13 +780,6 @@
                     category: 'الدخل الرئيسي',
                     amount: '+$4,850.00',
                     type: 'income'
-                },
-                {
-                    icon: '⛽',
-                    title: 'محطة البنزين',
-                    category: 'النقل',
-                    amount: '-$45.20',
-                    type: 'expense'
                 }
             ];
 
@@ -928,7 +801,6 @@
             const modals = document.querySelectorAll('.modal');
             const closeButtons = document.querySelectorAll('.close');
 
-            // إغلاق النوافذ عند النقر على زر الإغلاق
             closeButtons.forEach(closeBtn => {
                 closeBtn.addEventListener('click', function() {
                     const modal = this.closest('.modal');
@@ -938,7 +810,6 @@
                 });
             });
 
-            // إغلاق النوافذ عند النقر خارج المحتوى
             modals.forEach(modal => {
                 modal.addEventListener('click', function(e) {
                     if (e.target === this) {
@@ -952,7 +823,6 @@
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'block';
-                // تركيز على أول حقل إدخال
                 setTimeout(() => {
                     const firstInput = modal.querySelector('input, select');
                     if (firstInput) {
@@ -965,7 +835,6 @@
         // ============ إعداد أحداث الأزرار ============
         
         function setupEventListeners() {
-            // أزرار الإضافة السريعة
             document.getElementById('add-income-btn')?.addEventListener('click', () => {
                 openModal('transaction-modal');
                 document.getElementById('transaction-type').value = 'income';
@@ -976,19 +845,15 @@
                 document.getElementById('transaction-type').value = 'expense';
             });
 
-            // أزرار فتح النوافذ المنبثقة
             document.getElementById('add-transaction-btn')?.addEventListener('click', () => openModal('transaction-modal'));
             document.getElementById('add-account-btn')?.addEventListener('click', () => openModal('account-modal'));
             document.getElementById('add-debt-btn')?.addEventListener('click', () => openModal('debt-modal'));
             document.getElementById('add-savings-goal-btn')?.addEventListener('click', () => openModal('savings-modal'));
 
-            // أزرار الإعدادات
             document.getElementById('manage-categories-btn')?.addEventListener('click', () => openModal('categories-modal'));
             document.getElementById('manage-people-btn')?.addEventListener('click', () => openModal('people-modal'));
 
-            // زر الإضافة العائم
             document.getElementById('fab-add')?.addEventListener('click', () => {
-                // فتح نافذة حسب التبويب الحالي
                 switch(currentTab) {
                     case 'dashboard':
                     case 'transactions':
@@ -1009,34 +874,27 @@
                 }
             });
 
-            // رابط "عرض الكل" في المعاملات
             document.getElementById('see-all-transactions')?.addEventListener('click', () => {
                 switchTab('transactions');
             });
 
-            // أزرار تصدير ومسح البيانات
             document.getElementById('export-data-btn')?.addEventListener('click', () => {
-                alert('سيتم تصدير البيانات قريباً');
+                showNotification('سيتم تصدير البيانات قريباً');
             });
 
             document.getElementById('clear-all-data-btn')?.addEventListener('click', () => {
                 if (confirm('هل أنت متأكد من رغبتك في مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
-                    alert('تم مسح البيانات');
+                    showNotification('تم مسح البيانات', 'warning');
                 }
             });
         }
 
-        // ============ إعداد مرشحات الفترة الزمنية ============
-        
         function setupPeriodFilters() {
             const periodButtons = document.querySelectorAll('.period-btn');
             
             periodButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
-                    // إزالة التنشيط من جميع الأزرار
                     periodButtons.forEach(b => b.classList.remove('active'));
-                    
-                    // تنشيط الزر المحدد
                     this.classList.add('active');
                     
                     const period = this.getAttribute('data-period');
@@ -1047,70 +905,47 @@
 
         function filterTransactionsByPeriod(period) {
             console.log(`تصفية المعاملات حسب الفترة: ${period}`);
-            // هنا يمكن إضافة منطق تصفية المعاملات حسب الفترة المحددة
         }
 
-        // ============ وظائف مساعدة ============
-        
         function showNotification(message, type = 'success') {
-            // إنشاء إشعار بسيط
             const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'var(--gradient-forest)' : 'var(--gradient-fire)';
             notification.style.cssText = `
                 position: fixed;
-                top: 20px;
+                top: 80px;
                 right: 20px;
-                background: ${type === 'success' ? 'var(--accent-teal)' : 'var(--accent-orange)'};
+                background: ${bgColor};
                 color: white;
-                padding: 12px 20px;
-                border-radius: 12px;
+                padding: 16px 24px;
+                border-radius: var(--border-radius);
                 z-index: 2000;
-                font-weight: 500;
-                box-shadow: var(--shadow-floating);
+                font-weight: 600;
+                box-shadow: var(--shadow-neumorphism), var(--glow-blue);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
             `;
             notification.textContent = message;
             
             document.body.appendChild(notification);
             
-            // إزالة الإشعار بعد 3 ثوانٍ
             setTimeout(() => {
                 notification.remove();
             }, 3000);
         }
-
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            }).format(amount);
-        }
-
-        function formatDate(date) {
-            return new Intl.DateTimeFormat('ar-SA', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }).format(new Date(date));
-        }
-
-        // ============ معالج الأخطاء ============
-        
-        window.addEventListener('error', function(e) {
-            console.error('خطأ في التطبيق:', e.error);
-        });
 
         // منع تحديث الصفحة عند إرسال النماذج (للاختبار)
         document.addEventListener('submit', function(e) {
             e.preventDefault();
             showNotification('تم حفظ البيانات بنجاح!');
             
-            // إغلاق النافذة المنبثقة
             const modal = e.target.closest('.modal');
             if (modal) {
                 modal.style.display = 'none';
             }
         });
 
-        console.log('🚀 تم تحميل تطبيق إدارة الأموال الشخصية بنجاح!');
+        console.log('🚀 تم تحميل تطبيق إدارة الأموال الشخصية بالتصميم الجديد بنجاح!');
     </script>
 </body>
 </html>
